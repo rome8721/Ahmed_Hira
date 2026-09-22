@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turn Flow Simulator</title>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #f0f2f5;
+  --text: #1c2330;
+  --muted: #5d6778;
+  --border: #d9dee6;
+  --accent: #2f6fdd;
+  --accent-soft: #e3ecfc;
+  --ok: #1e8a4c;
+  --ok-soft: #e1f4e8;
+  --err: #c2372f;
+  --err-soft: #fbe5e3;
+  --io: #8a5a00;
+  --io-soft: #fbf0d9;
+  --term-bg: #10151f;
+  --term-text: #d7dde8;
+  --term-input: #7fd3a0;
+  --term-new: #ffd479;
+  --shadow: 0 1px 2px rgba(20,30,50,.06), 0 2px 8px rgba(20,30,50,.05);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f131a;
+    --panel: #171c25;
+    --panel-2: #1e2430;
+    --text: #e4e8ef;
+    --muted: #9aa4b5;
+    --border: #2c3442;
+    --accent: #6b9cf0;
+    --accent-soft: #1d2b45;
+    --ok: #5fcf8c;
+    --ok-soft: #173325;
+    --err: #f07b72;
+    --err-soft: #3a1c1a;
+    --io: #e6b84f;
+    --io-soft: #352a12;
+    --term-bg: #0a0d13;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f131a;
+  --panel: #171c25;
+  --panel-2: #1e2430;
+  --text: #e4e8ef;
+  --muted: #9aa4b5;
+  --border: #2c3442;
+  --accent: #6b9cf0;
+  --accent-soft: #1d2b45;
+  --ok: #5fcf8c;
+  --ok-soft: #173325;
+  --err: #f07b72;
+  --err-soft: #3a1c1a;
+  --io: #e6b84f;
+  --io-soft: #352a12;
+  --term-bg: #0a0d13;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 var(--sans);
+}
+code, pre, .mono { font-family: var(--mono); }
+code { font-size: .92em; background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+header {
+  max-width: 1280px; margin: 0 auto; padding: 20px 16px 8px;
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between;
+}
+header h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 760px; }
+.theme-btn {
+  border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+  border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer;
+}
+main { max-width: 1280px; margin: 0 auto; padding: 8px 16px 40px; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.tab {
+  border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  border-radius: 10px; padding: 8px 14px; font: inherit; cursor: pointer; text-align: left;
+  box-shadow: var(--shadow);
+}
+.tab small { display: block; color: var(--muted); font-size: 12px; }
+.tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.tab .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+.scenario-info {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 14px; margin-bottom: 12px; box-shadow: var(--shadow); font-size: 14px;
+}
+.scenario-info summary { cursor: pointer; font-weight: 600; }
+.scenario-info pre { background: var(--panel-2); padding: 8px 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0 0; font-size: 13px; }
+
+.controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 12px; margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.controls button {
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+  border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; min-width: 44px;
+}
+.controls button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.controls button:disabled { opacity: .45; cursor: default; }
+.counter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; margin-left: 4px; }
+.hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+.strip { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; margin-top: 4px; }
+.strip button {
+  min-width: 0; width: 26px; height: 26px; padding: 0; border-radius: 50%;
+  font-size: 11px; font-family: var(--mono); background: var(--panel-2);
+}
+.strip button.done { background: var(--accent-soft); border-color: var(--accent-soft); }
+.strip button.err { border-color: var(--err); }
+.strip button.cur { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.grid {
+  display: grid; gap: 12px;
+  grid-template-columns: 250px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "layers detail terminal";
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 230px minmax(0, 1fr); grid-template-areas: "layers detail" "terminal terminal"; }
+}
+@media (max-width: 720px) {
+  .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "layers" "detail" "terminal"; }
+  .layers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hint { display: none; }
+}
+.panel {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); min-width: 0;
+}
+.panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+
+.layers-wrap { grid-area: layers; padding: 12px; }
+.layers { display: flex; flex-direction: column; gap: 6px; }
+.layer {
+  border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; background: var(--panel-2);
+  transition: background .2s, border-color .2s, transform .2s; position: relative;
+}
+.layer .name { font-weight: 600; font-size: 14px; }
+.layer .file { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.layer .method { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 2px; min-height: 0; word-break: break-word; }
+.layer .method:empty { display: none; }
+.layer.visited { border-color: var(--accent-soft); }
+.layer.visited::after { content: "✓"; position: absolute; right: 8px; top: 6px; font-size: 11px; color: var(--muted); }
+.layer.from { border-style: dashed; border-color: var(--muted); }
+.layer.current { background: var(--accent-soft); border: 2px solid var(--accent); padding: 6px 9px; transform: translateX(3px); }
+.layer.current.err { background: var(--err-soft); border-color: var(--err); }
+.layer.current.err .method { color: var(--err); }
+.layer.current::after { content: "◀ now"; color: var(--accent); font-weight: 600; }
+.layer.current.err::after { color: var(--err); }
+.legend { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+.legend span { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+
+.detail { grid-area: detail; padding: 14px 16px; }
+.step-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 6px; }
+.badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; }
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.badge.err { background: var(--err-soft); color: var(--err); }
+.badge.io { background: var(--io-soft); color: var(--io); }
+.badge.info { background: var(--accent-soft); color: var(--accent); }
+.hop { font-size: 13px; color: var(--muted); }
+.detail h3 { font-size: 19px; margin: 2px 0 6px; line-height: 1.3; }
+.call {
+  font-family: var(--mono); font-size: 13.5px; background: var(--panel-2); border-left: 3px solid var(--accent);
+  padding: 7px 10px; border-radius: 6px; overflow-x: auto; white-space: pre;
+}
+.loc { font-family: var(--mono); font-size: 12px; color: var(--muted); margin: 6px 0 10px; }
+.explain { margin: 0 0 12px; }
+.explain p { margin: 0 0 8px; }
+.payload-label { display: flex; justify-content: space-between; align-items: baseline; }
+.payload {
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.5; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; margin: 0; overflow-x: auto; white-space: pre;
+}
+.stack { margin: 12px 0 0; padding: 0; list-style: none; font-family: var(--mono); font-size: 12px; }
+.stack li { padding: 3px 8px; border-left: 2px solid var(--border); color: var(--muted); }
+.stack li:last-child { border-left-color: var(--accent); color: var(--text); font-weight: 600; }
+
+.terminal-wrap { grid-area: terminal; padding: 12px; }
+.terminal {
+  background: var(--term-bg); color: var(--term-text); border-radius: 8px; padding: 10px 12px;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.45; white-space: pre; overflow: auto;
+  max-height: 560px; min-height: 200px;
+}
+.terminal .in { color: var(--term-input); font-weight: 700; }
+.terminal .new { color: var(--term-new); }
+.terminal .new .in { color: var(--term-input); }
+.term-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.quiz { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 8px; font-size: 14px; }
+.quiz b { color: var(--accent); }
+.quiz details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 4px; }
+footer { max-width: 1280px; margin: 0 auto; padding: 0 16px 30px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>35 Domino: one turn, step by step</h1>
+    <p>Step through one turn exactly as the C++ code runs it. The highlighted box is the class running right now, the middle panel shows the real method, file and data, and the right panel shows what the player sees in the terminal. All data comes from real runs of <code>./program</code> using the save files in <code>onboarding/saves/</code>. Tiles only, no personal data.</p>
+  </div>
+  <button class="theme-btn" id="themeBtn" type="button">Toggle theme</button>
+</header>
+
+<main>
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <details class="scenario-info" id="scenarioInfo">
+    <summary>Reproduce this scenario in the real program</summary>
+    <div id="scenarioRepro"></div>
+  </details>
+
+  <div class="controls">
+    <button type="button" id="firstBtn" title="First step (Home)">⏮</button>
+    <button type="button" id="prevBtn" title="Previous step (←)">◀ Prev</button>
+    <button type="button" id="nextBtn" class="primary" title="Next step (→)">Next ▶</button>
+    <button type="button" id="playBtn" title="Auto-play (Space)">▶ Play</button>
+    <span class="counter" id="counter"></span>
+    <span class="hint">Keys: ← → step · Space play/pause · 1 2 3 switch scenario</span>
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <div class="grid">
+    <section class="panel layers-wrap" aria-label="Layers">
+      <h2>Layers (classes)</h2>
+      <div class="layers" id="layers"></div>
+      <div class="legend">
+        <div><span style="background:var(--accent-soft);border:2px solid var(--accent)"></span>running now</div>
+        <div><span style="border:1px dashed var(--muted)"></span>called from</div>
+        <div><span style="background:var(--panel-2);border:1px solid var(--accent-soft)"></span>✓ visited this turn</div>
+      </div>
+    </section>
+
+    <section class="panel detail" aria-live="polite">
+      <div class="step-head">
+        <span class="badge" id="badge"></span>
+        <span class="hop" id="hop"></span>
+      </div>
+      <h3 id="title"></h3>
+      <div class="call" id="call"></div>
+      <div class="loc" id="loc"></div>
+      <div class="explain" id="explain"></div>
+      <div class="payload-label"><h2>Data at this step</h2></div>
+      <pre class="payload" id="payload"></pre>
+      <h2 style="margin-top:14px">Call stack (innermost last)</h2>
+      <ul class="stack" id="stack"></ul>
+      <div class="quiz" id="quiz" hidden></div>
+    </section>
+
+    <section class="panel terminal-wrap" aria-label="Terminal">
+      <h2>Terminal (what the player sees)</h2>
+      <div class="terminal" id="terminal"></div>
+      <div class="term-note"><span style="color:var(--term-input);font-weight:700">green</span> = typed by the player · <span style="color:var(--term-new)">yellow</span> = printed during this step</div>
+    </section>
+  </div>
+</main>
+<footer>Line numbers match the code when this was written and may drift a little. Source of truth: <code>src/</code>.</footer>
+
+<script>
+"use strict";
+
+const LAYERS = [
+  { id: "term",       name: "Terminal",          file: "you, typing" },
+  { id: "view",       name: "View",              file: "src/view.cpp (namespace)" },
+  { id: "tournament", name: "Tournament",        file: "src/tournament.cpp" },
+  { id: "round",      name: "Round",             file: "src/round.cpp" },
+  { id: "human",      name: "Human : Player",    file: "src/human.cpp, src/player.cpp" },
+  { id: "tile",       name: "Tile",              file: "src/tile.cpp" },
+  { id: "hand",       name: "Hand",              file: "src/hand.cpp" },
+  { id: "layout",     name: "Layout",            file: "src/layout.cpp" },
+  { id: "boneyard",   name: "Boneyard",          file: "src/boneyard.cpp" },
+  { id: "serializer", name: "Serializer",        file: "src/serializer.cpp" }
+];
+
+// Terminal output helpers: o = printed line, p = prompt (no newline), i = typed input (ends the line)
+const TABLE_A = [
+  ["o", ""],
+  ["o", "           "],
+  ["o", "L  0-4 4-6  R"],
+  ["o", "           "],
+  ["o", "Open ends: L=0 R=6   total pips at open ends = 6"],
+  ["o", "Human's hand: 1-6 1-5 2-4 3-6 2-2 5-6   (sum 43)"],
+  ["o", "Computer's hand: 1-1 0-6 1-2 6-6 3-4 3-3   (sum 36)"],
+  ["o", "Boneyard: 14 tiles (1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 2-3 1-3 2-5 3-5)"],
+  ["o", "Human score: 0 this round, 0 before it."],
+  ["o", "Computer score: 10 this round, 0 before it."],
+  ["o", "--- Human's turn (target 5) ---"]
+];
+const TABLE_B = [
+  ["o", ""],
+  ["o", "           "],
+  ["o", "L  0-4 4-6  R"],
+  ["o", "           "],
+  ["o", "Open ends: L=0 R=6   total pips at open ends = 6"],
+  ["o", "Human's hand: 1-3 1-5 2-4 2-3 2-2 3-5   (sum 33)"],
+  ["o", "Computer's hand: 1-1 5-6 1-2 6-6 3-4 3-3   (sum 41)"],
+  ["o", "Boneyard: 14 tiles (1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 1-6 3-6 2-5 0-6)"],
+  ["o", "Human score: 0 this round, 0 before it."],
+  ["o", "Computer score: 10 this round, 0 before it."],
+  ["o", "--- Human's turn (target 5) ---"]
+];
+const PROMPT_TILE = "Enter the tile to play (like 2-5), or 'help' for a suggestion: ";
+
+function resumeStep(file, gsPayload) {
+  return {
+    layer: "tournament", from: null, kind: "info",
+    title: "Setup: resume the save file",
+    call: "Tournament::run()\n  askResume(saved)   // Serializer::load(\"" + file + "\", state)\n  round.restore(saved)",
+    loc: "tournament.cpp:18-39 → serializer.cpp:43 → round.cpp:57",
+    text: "<p>Before the turn starts, the program loads the save file so we begin at an exact moment in a game. <code>Serializer::load</code> reads the text into a <code>GameState</code> record, and <code>Round::restore</code> rebuilds the <code>Layout</code>, <code>Boneyard</code>, hands and scores from it.</p><p>This setup is covered on Day 4. The turn itself starts at the next step.</p>",
+    payload: gsPayload,
+    out: [["o", "Welcome to 35 Domino!"], ["p", "Resume a saved game? (y/n): "], ["i", "y"], ["p", "Enter the save file name: "], ["i", file], ["o", "Resuming the saved round. Target score is 5."]],
+    stack: ["main()", "Tournament::run()"]
+  };
+}
+
+const GS_A =
+`GameState {
+  tournamentScore: 7          // the goal of the session
+  targetScore:     5
+  players: {
+    "Computer": { hand: "1-1 0-6 1-2 6-6 3-4 3-3", roundScore: 10, tournamentScore: 0 }
+    "Human":    { hand: "1-6 1-5 2-4 3-6 2-2 5-6", roundScore: 0,  tournamentScore: 0 }
+  }
+  layoutText:   "L 0-4 4-6 R"
+  boneyardText: "1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 2-3 1-3 2-5 3-5"
+  nextPlayer:   "Human"
+}
+→ after restore(): Round.m_next = 0 (Human), m_targetScore = 5`;
+
+const GS_B =
+`GameState {
+  tournamentScore: 7
+  targetScore:     5
+  players: {
+    "Computer": { hand: "1-1 5-6 1-2 6-6 3-4 3-3", roundScore: 10, tournamentScore: 0 }
+    "Human":    { hand: "1-3 1-5 2-4 2-3 2-2 3-5", roundScore: 0,  tournamentScore: 0 }
+  }
+  layoutText:   "L 0-4 4-6 R"
+  boneyardText: "1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 1-6 3-6 2-5 0-6"
+  nextPlayer:   "Human"
+}
+// Notice: no tile in the Human's hand has a 0 or a 6.`;
+
+const S_PLAY = ["main()", "Tournament::run()", "Round::play()"];
+const S_TURN = S_PLAY.concat(["Round::takeTurn(current)"]);
+const S_HUMAN = S_TURN.concat(["Human::chooseMove(layout, 5)"]);
+
+const SCENARIOS = [
+  {
+    id: "happy", name: "Happy path", sub: "Play 5-6 on the Right, score 5", color: "var(--ok)",
+    file: "onboarding/saves/happy-path.txt",
+    inputs: ["y", "onboarding/saves/happy-path.txt", "5-6", "R", "y", "mygame.txt"],
+    steps: [
+      resumeStep("onboarding/saves/happy-path.txt", GS_A),
+      {
+        layer: "round", from: "tournament", kind: "info",
+        title: "Round::play() picks the current player",
+        call: "Player* current = m_players[m_next];\nshowTable();",
+        loc: "round.cpp:110-114",
+        text: "<p>The turn loop begins. <code>m_next</code> is 0, so <code>current</code> points at the Human. <code>Round</code> only ever sees a <code>Player*</code> and never checks which kind of player it has.</p>",
+        payload:
+`Round {
+  m_players:         [ &m_human, &m_computer ]   // Player* x 2
+  m_next:            0           → current = Human
+  m_targetScore:     5
+  m_consecutivePasses: 0
+  m_layout:          "L 0-4 4-6 R"
+  m_boneyard:        14 tiles
+}`,
+        out: [], stack: S_PLAY
+      },
+      {
+        layer: "view", from: "round", kind: "io",
+        title: "View prints the table",
+        call: "View::showLayout(m_layout);\nView::showHand(name, hand);   // x2\nView::message(...);",
+        loc: "round.cpp:244-256 → view.cpp:49, 91, 34",
+        text: "<p><code>Round::showTable()</code> asks <code>View</code> to draw everything. <code>View</code> reads the <code>Layout</code> and <code>Hand</code> but never changes them. This is the only layer that prints.</p>",
+        payload:
+`Layout (read-only here)
+  getLine():         [0-4, 4-6]
+  hasSpinner():      false         → no U / D ends yet
+  getEndPips('L'):   0
+  getEndPips('R'):   6
+  getOpenEndSum():   6`,
+        out: TABLE_A, stack: S_PLAY.concat(["Round::showTable()", "View::showLayout(layout)"])
+      },
+      {
+        layer: "human", from: "round", kind: "ok",
+        title: "Can the player play at all?",
+        call: "while (!player->canPlay(m_layout)) { ...draw... }",
+        loc: "round.cpp:182 → player.cpp:16-26",
+        text: "<p><code>Player::canPlay</code> (shared by Human and Computer) tries every tile in the hand at every end, and stops at the first one <code>Layout::canPlace</code> accepts. If nothing fits, <code>Round</code> would draw from the boneyard (see the <b>Draw from boneyard</b> scenario).</p>",
+        payload:
+`hand = [1-6, 1-5, 2-4, 3-6, 2-2, 5-6]
+ends = L R U D
+
+canPlace(1-6, 'L')  → end shows 0, tile has 1,6 → false
+canPlace(1-6, 'R')  → end shows 6, tile has 6   → true  ✔ stop
+
+canPlay() returns true → skip the draw loop`,
+        out: [], stack: S_TURN.concat(["Player::canPlay(layout)"])
+      },
+      {
+        layer: "human", from: "round", kind: "info",
+        title: "Virtual call: Round asks the player for a move",
+        call: "Move move = player->chooseMove(m_layout, m_targetScore);",
+        loc: "round.cpp:193 → human.cpp:19",
+        text: "<p><code>chooseMove</code> is <b>pure virtual</b> in <code>Player</code>. At run time C++ checks the real type of the object behind the pointer, finds a <code>Human</code>, and runs <code>Human::chooseMove</code>. For the computer, the same line runs <code>Computer::chooseMove</code>. This is <b>polymorphism</b>.</p>",
+        payload:
+`static type of player:  Player*
+dynamic type:           Human     → Human::chooseMove(layout, 5)
+
+arguments:
+  layout       = const Layout&  "L 0-4 4-6 R"   (read-only)
+  targetScore  = 5`,
+        out: [], stack: S_HUMAN
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Read the tile the player types",
+        call: "std::string answer = View::readWord(\"Enter the tile to play ...\");",
+        loc: "human.cpp:21 → view.cpp:128 → view.cpp:138",
+        text: "<p><code>readWord</code> calls <code>readLine</code>, which prints the prompt and waits on <code>std::getline(std::cin, ...)</code>. <b>In the debugger, this is where the program looks frozen</b>: it's waiting for you to type in the terminal.</p>",
+        payload:
+`readLine(prompt)  → "5-6"          (whole line typed)
+istringstream >> word → "5-6"      (first word only)
+
+answer = "5-6"
+answer == "help"?  no`,
+        out: [["p", PROMPT_TILE], ["i", "5-6"]], stack: S_HUMAN.concat(["View::readWord(prompt)", "View::readLine(prompt)"])
+      },
+      {
+        layer: "tile", from: "human", kind: "ok",
+        title: "Parse the text into a Tile",
+        call: "Tile tile;\nif (!Tile::fromString(answer, tile)) { ...not a tile... }",
+        loc: "human.cpp:34-38 → tile.cpp:63-77",
+        text: "<p>A <code>static</code> function turns text into a <code>Tile</code>. It uses <code>setPips</code> on a scratch tile, so the 0–6 range check lives in one place.</p>",
+        payload:
+`text = "5-6"
+  length == 3            ✔
+  text[1] == '-'         ✔
+  isdigit('5'), ('6')    ✔
+  scratch.setPips(5, 6)  ✔ (both within 0..6)
+
+tile = Tile { m_leftPips: 5, m_rightPips: 6 }
+returns true`,
+        out: [], stack: S_HUMAN.concat(["Tile::fromString(\"5-6\", tile)"])
+      },
+      {
+        layer: "hand", from: "human", kind: "ok",
+        title: "Is that tile in the player's hand?",
+        call: "if (!m_hand.contains(tile)) { ...not in your hand... }",
+        loc: "human.cpp:39 → hand.cpp:58 → hand.cpp:113",
+        text: "<p><code>contains</code> calls the private <code>indexOf</code>, which compares with <code>Tile::operator==</code>. That operator treats <code>5-6</code> and <code>6-5</code> as the same domino.</p>",
+        payload:
+`m_hand.m_tiles
+  [0] 1-6
+  [1] 1-5
+  [2] 2-4
+  [3] 3-6
+  [4] 2-2
+  [5] 5-6   ← 5-6 == 5-6 (same way round) ✔
+
+indexOf → 5   contains → true`,
+        out: [], stack: S_HUMAN.concat(["Hand::contains(5-6)", "Hand::indexOf(5-6)"])
+      },
+      {
+        layer: "layout", from: "human", kind: "info",
+        title: "Which ends are open?",
+        call: "char end = askEnd(layout, tile);\n  // for L, R, U, D: if (layout.isOpenEnd(end)) open += end;",
+        loc: "human.cpp:43 → human.cpp:58-68 → layout.cpp:38",
+        text: "<p><code>Human::askEnd</code> builds the list of ends the player may choose. <code>U</code> and <code>D</code> only open once a spinner (the first double) is on the table.</p><p>Note: it lists open ends <i>without</i> checking whether this tile fits them. That check comes next.</p>",
+        payload:
+`isOpenEnd('L') → !isEmpty()   → true
+isOpenEnd('R') → !isEmpty()   → true
+isOpenEnd('U') → hasSpinner() → false
+isOpenEnd('D') → hasSpinner() → false
+
+open = "LR"`,
+        out: [], stack: S_HUMAN.concat(["Human::askEnd(layout, 5-6)", "Layout::isOpenEnd(end)"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Read the end letter",
+        call: "std::string answer = View::readWord(\"Where should 5-6 go? (LR): \");\nchar letter = std::toupper(answer[0]);",
+        loc: "human.cpp:69-77 → view.cpp:128",
+        text: "<p>The answer must be exactly one character and one of the open ends. Lower-case is accepted because of <code>toupper</code>.</p>",
+        payload:
+`answer = "R"
+answer.length() == 1       ✔
+letter = toupper('R') = 'R'
+"LR".find('R') != npos     ✔
+
+askEnd returns 'R'`,
+        out: [["p", "Where should 5-6 go? (LR): "], ["i", "R"]], stack: S_HUMAN.concat(["Human::askEnd(layout, 5-6)", "View::readWord(prompt)"])
+      },
+      {
+        layer: "layout", from: "human", kind: "ok",
+        title: "The legality check: Layout::canPlace",
+        call: "if (!layout.canPlace(tile, end)) { ...does not match... }",
+        loc: "human.cpp:44 → layout.cpp:109-121",
+        text: "<p><code>canPlace</code> is the <b>single source of truth</b> for legality. A tile fits if either of its pips equals the pips showing at that end.</p>",
+        payload:
+`canPlace(5-6, 'R')
+  isEndLetter('R')     ✔
+  isEmpty()            false
+  isOpenEnd('R')       ✔
+  pips = getEndPips('R') = m_line.back().getRightPips() = 6
+  5 == 6 ?  no
+  6 == 6 ?  yes  ✔
+
+returns true`,
+        out: [], stack: S_HUMAN.concat(["Layout::canPlace(5-6, 'R')"])
+      },
+      {
+        layer: "human", from: "layout", kind: "ok",
+        title: "Return the decision as a Move",
+        call: "return Move(tile, end);",
+        loc: "human.cpp:50 (Move is in move.h)",
+        text: "<p>The decision travels back to <code>Round</code> as one small value. The two-argument constructor sets <code>valid = true</code>.</p>",
+        payload:
+`Move {
+  tile:  Tile { 5, 6 }
+  end:   'R'
+  valid: true
+}`,
+        out: [], stack: S_HUMAN
+      },
+      {
+        layer: "layout", from: "round", kind: "ok",
+        title: "Place the tile on the table (and flip it)",
+        call: "if (!m_layout.place(move)) { ...forfeits the turn... }",
+        loc: "round.cpp:194 → layout.h:65 → layout.cpp:156-205",
+        text: "<p><code>place</code> checks <code>canPlace</code> <b>again</b> (the model protects itself), then turns the tile so touching pips match. On the Right end the tile's <i>left</i> pip must touch, so <code>5-6</code> is stored as <code>6-5</code>.</p>",
+        payload:
+`pips = getEndPips('R') = 6
+case RIGHT:
+  tile.getLeftPips() = 5  ≠ 6  → tile = tile.flipped()  → 6-5
+  m_line.push_back(6-5)
+  6-5 is not a double → spinner unchanged (NO_SPINNER = -1)
+
+m_line before: [0-4, 4-6]
+m_line after:  [0-4, 4-6, 6-5]
+toString():    "L 0-4 4-6 6-5 R"`,
+        out: [], stack: S_TURN.concat(["Layout::place(move)"])
+      },
+      {
+        layer: "hand", from: "round", kind: "ok",
+        title: "Remove the tile from the hand",
+        call: "player->removeTile(move.tile);",
+        loc: "round.cpp:198 → player.cpp:32 → hand.cpp:93",
+        text: "<p><code>Player::removeTile</code> forwards to its <code>Hand</code>. <code>Round</code> can't modify the hand directly, because <code>getHand()</code> returns a <i>copy</i>.</p>",
+        payload:
+`indexOf(5-6) → 5
+m_tiles.erase(begin + 5)
+
+hand before: [1-6, 1-5, 2-4, 3-6, 2-2, 5-6]  (sum 43)
+hand after:  [1-6, 1-5, 2-4, 3-6, 2-2]       (sum 32)`,
+        out: [], stack: S_TURN.concat(["Player::removeTile(5-6)", "Hand::removeTile(5-6)"])
+      },
+      {
+        layer: "layout", from: "round", kind: "ok",
+        title: "Count the open ends",
+        call: "int sum = m_layout.getOpenEndSum();",
+        loc: "round.cpp:199 → layout.cpp:75-101",
+        text: "<p>Add the pips showing at every open end. A double at an end would count <b>both</b> pips (<code>endValue</code>). With no spinner, only L and R count.</p>",
+        payload:
+`m_line = [0-4, 4-6, 6-5]   (size 3)
+  L: endValue(0-4, 0) = 0
+  R: endValue(6-5, 5) = 5
+hasSpinner() = false → no U / D
+
+sum = 5`,
+        out: [], stack: S_TURN.concat(["Layout::getOpenEndSum()"])
+      },
+      {
+        layer: "round", from: "layout", kind: "ok",
+        title: "Score it: is 5 a multiple of the target?",
+        call: "int points = (sum % m_targetScore == 0) ? sum : 0;\nplayer->addRoundPoints(points);",
+        loc: "round.cpp:200-201 → player.cpp:45-51",
+        text: "<p>If the open-end total divides evenly by the target, the player scores the whole total. <code>addRoundPoints</code> refuses negative values, but 0 is fine.</p>",
+        payload:
+`sum = 5, m_targetScore = 5
+5 % 5 == 0  → points = 5
+
+Human.m_roundScore: 0 → 5`,
+        out: [], stack: S_TURN.concat(["Player::addRoundPoints(5)"])
+      },
+      {
+        layer: "view", from: "round", kind: "io",
+        title: "Tell the player what happened",
+        call: "View::message(note);",
+        loc: "round.cpp:202-209 → view.cpp:34",
+        text: "<p><code>Round</code> builds the sentence and <code>View</code> prints it. <code>takeTurn</code> then returns <code>true</code> (\"placed\").</p>",
+        payload:
+`note = "Human placed 5-6 at the Right. Open-end total is 5"
+     + ", a multiple of 5: 5 points!"
+takeTurn returns true`,
+        out: [["o", "Human placed 5-6 at the Right. Open-end total is 5, a multiple of 5: 5 points!"]],
+        stack: S_TURN.concat(["View::message(note)"])
+      },
+      {
+        layer: "round", from: "view", kind: "io",
+        title: "Back in play(): switch player, offer to save",
+        call: "m_consecutivePasses = 0;\nif (!current->hasTiles()) { finish(); ... }\nm_next = (m_next + 1) % PLAYER_COUNT;\nif (placed && View::readYesNo(\"Save the game and quit?\")) return SAVE_REQUESTED;",
+        loc: "round.cpp:116-134",
+        text: "<p>The hand still has 5 tiles, so the round goes on. <code>m_next</code> moves to the Computer <b>before</b> the save prompt, which is why the save file will say <code>Next Player: Computer</code>. Answering <code>n</code> would start the computer's turn (see <code>diagrams/computer-turn.md</code>).</p>",
+        payload:
+`placed = true   → m_consecutivePasses = 0
+current->hasTiles() = true (5 left)
+m_next: 0 → 1   (Computer)
+readYesNo → "y" → return SAVE_REQUESTED`,
+        out: [["p", "Save the game and quit? (y/n): "], ["i", "y"]], stack: S_PLAY.concat(["View::readYesNo(prompt)"])
+      },
+      {
+        layer: "tournament", from: "round", kind: "info",
+        title: "Copy the round into a GameState record",
+        call: "if (round.play() == Round::SAVE_REQUESTED) { saveAndQuit(round); return; }\n  round.toState(m_tournamentScore, state);",
+        loc: "tournament.cpp:53-56 → tournament.cpp:91-93 → round.cpp:22-36",
+        text: "<p><code>toState</code> copies the model objects (<code>Layout</code>, <code>Boneyard</code>, <code>Player</code>s) into a plain <code>GameState</code> record, which works like a DTO. Layout and Boneyard each write their own text form with <code>toString()</code>.</p>",
+        payload:
+`GameState {
+  tournamentScore: 7
+  targetScore:     5
+  players: {
+    "Computer": { hand: "1-1 0-6 1-2 6-6 3-4 3-3", roundScore: 10, tournamentScore: 0 }
+    "Human":    { hand: "1-6 1-5 2-4 3-6 2-2",     roundScore: 5,  tournamentScore: 0 }
+  }
+  layoutText:   "L 0-4 4-6 6-5 R"
+  boneyardText: "1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 2-3 1-3 2-5 3-5"
+  nextPlayer:   "Computer"
+}`,
+        out: [], stack: ["main()", "Tournament::run()", "Tournament::saveAndQuit(round)", "Round::toState(7, state)"]
+      },
+      {
+        layer: "serializer", from: "tournament", kind: "ok",
+        title: "Write the save file (the \"database write\")",
+        call: "Serializer::save(state, fileName);",
+        loc: "tournament.cpp:94-101 → serializer.cpp:11-34",
+        text: "<p>The only place that writes files. Computer's block always comes first, to match the course example. After this, <code>run()</code> returns and the program exits.</p>",
+        payload:
+`--- mygame.txt ---
+Tournament Score: 7
+
+Target Score: 5
+
+Computer:
+   Hand: 1-1 0-6 1-2 6-6 3-4 3-3
+   Current Score: 10
+   Tournament Score: 0
+
+Human:
+   Hand: 1-6 1-5 2-4 3-6 2-2
+   Current Score: 5
+   Tournament Score: 0
+
+Layout:   L 0-4 4-6 6-5 R
+
+Boneyard:  1-4 0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 2-3 1-3 2-5 3-5
+
+Next Player: Computer`,
+        out: [["p", "Enter a file name to save to: "], ["i", "mygame.txt"], ["o", "Game saved to 'mygame.txt'. Goodbye!"]],
+        stack: ["main()", "Tournament::run()", "Tournament::saveAndQuit(round)", "Serializer::save(state, \"mygame.txt\")"],
+        quiz: { q: "In the saved file, why does the human's tile appear as <code>6-5</code> and not <code>5-6</code>?", a: "<code>Layout::place</code> flips tiles so touching pips match. On the Right end the new tile's left pip must equal the end's 6, so 5-6 was stored as 6-5, and <code>Layout::toString</code> writes it that way." }
+      }
+    ]
+  },
+
+  {
+    id: "draw", name: "Draw from boneyard", sub: "Can't play: draw twice, then play 0-5 Left", color: "var(--io)",
+    file: "onboarding/saves/draw-path.txt",
+    inputs: ["y", "onboarding/saves/draw-path.txt", "0-5", "L", "y", "mygame.txt"],
+    steps: [
+      resumeStep("onboarding/saves/draw-path.txt", GS_B),
+      {
+        layer: "round", from: "tournament", kind: "info",
+        title: "Round::play() picks the Human and prints the table",
+        call: "Player* current = m_players[m_next];\nshowTable();",
+        loc: "round.cpp:110-114",
+        text: "<p>Same start as the happy path. Look at the hand: nothing has a 0 or a 6, and the table's open ends show 0 and 6.</p>",
+        payload:
+`m_next = 0 → Human
+open ends: L=0, R=6  (no spinner → U, D closed)
+Human hand: [1-3, 1-5, 2-4, 2-3, 2-2, 3-5]`,
+        out: TABLE_B, stack: S_PLAY
+      },
+      {
+        layer: "human", from: "round", kind: "err",
+        title: "canPlay() says no",
+        call: "while (!player->canPlay(m_layout)) {",
+        loc: "round.cpp:182 → player.cpp:16-26",
+        text: "<p>All 6 tiles × 4 ends are tried, and every <code>canPlace</code> call returns false. So <code>takeTurn</code> enters the draw loop.</p>",
+        payload:
+`canPlace(1-3, L/R/U/D)  → false  (needs a 0 or 6)
+canPlace(1-5, ...)      → false
+canPlace(2-4, ...)      → false
+canPlace(2-3, ...)      → false
+canPlace(2-2, ...)      → false
+canPlace(3-5, ...)      → false
+canPlay() = false`,
+        out: [], stack: S_TURN.concat(["Player::canPlay(layout)"])
+      },
+      {
+        layer: "boneyard", from: "round", kind: "ok",
+        title: "Draw the front tile of the boneyard",
+        call: "Tile drawn;\nif (!m_boneyard.drawTile(drawn)) { ...pass... }",
+        loc: "round.cpp:183-188 → boneyard.cpp:99-106",
+        text: "<p>Draws always come off the <b>front</b> (the left-most tile in the save file). If the boneyard were empty, <code>drawTile</code> would return false and the player would <b>pass</b>. Try that on Day 3 with <code>saves/empty-boneyard.txt</code>.</p>",
+        payload:
+`isEmpty()? no
+drawn = m_tiles.front() = 1-4
+m_tiles.erase(begin)
+
+boneyard: 14 → 13 tiles
+[0-5 0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 1-6 3-6 2-5 0-6]`,
+        out: [], stack: S_TURN.concat(["Boneyard::drawTile(drawn)"])
+      },
+      {
+        layer: "hand", from: "round", kind: "io",
+        title: "Add it to the hand and announce it",
+        call: "player->addTile(drawn);\nView::message(name + \" cannot play and draws \" + ...);",
+        loc: "round.cpp:189-191 → player.cpp:28 → hand.cpp:80",
+        text: "<p><code>Hand::addTile</code> refuses duplicates. That can't happen here, because a tile can't be in both the boneyard and a hand in a real game.</p>",
+        payload:
+`hand before: [1-3, 1-5, 2-4, 2-3, 2-2, 3-5]
+addTile(1-4) → true
+hand after:  [1-3, 1-5, 2-4, 2-3, 2-2, 3-5, 1-4]`,
+        out: [["o", "Human cannot play and draws 1-4 from the boneyard."]], stack: S_TURN.concat(["Player::addTile(1-4)", "Hand::addTile(1-4)"])
+      },
+      {
+        layer: "human", from: "round", kind: "err",
+        title: "Loop: still can't play",
+        call: "while (!player->canPlay(m_layout)) {   // 2nd time round",
+        loc: "round.cpp:182",
+        text: "<p><code>1-4</code> has no 0 or 6 either, so the <code>while</code> loop goes round again.</p>",
+        payload:
+`canPlace(1-4, 'L') → 0?  no
+canPlace(1-4, 'R') → 6?  no
+canPlay() = false → draw again`,
+        out: [], stack: S_TURN.concat(["Player::canPlay(layout)"])
+      },
+      {
+        layer: "boneyard", from: "round", kind: "ok",
+        title: "Draw again",
+        call: "m_boneyard.drawTile(drawn);",
+        loc: "round.cpp:184 → boneyard.cpp:99",
+        text: "<p>The next front tile is <code>0-5</code>.</p>",
+        payload:
+`drawn = 0-5
+boneyard: 13 → 12 tiles
+[0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 1-6 3-6 2-5 0-6]`,
+        out: [], stack: S_TURN.concat(["Boneyard::drawTile(drawn)"])
+      },
+      {
+        layer: "hand", from: "round", kind: "io",
+        title: "Add 0-5 to the hand",
+        call: "player->addTile(drawn);",
+        loc: "round.cpp:189-191",
+        text: "<p>Hand now has 8 tiles.</p>",
+        payload:
+`hand: [1-3, 1-5, 2-4, 2-3, 2-2, 3-5, 1-4, 0-5]`,
+        out: [["o", "Human cannot play and draws 0-5 from the boneyard."]], stack: S_TURN.concat(["Player::addTile(0-5)", "Hand::addTile(0-5)"])
+      },
+      {
+        layer: "human", from: "round", kind: "ok",
+        title: "canPlay() is now true",
+        call: "while (!player->canPlay(m_layout))   // exits the loop",
+        loc: "round.cpp:182 → player.cpp:16",
+        text: "<p><code>0-5</code> fits the Left end (showing 0). The loop ends and the normal turn continues.</p>",
+        payload:
+`... canPlace(0-5, 'L') → end shows 0, tile has 0 → true ✔
+canPlay() = true`,
+        out: [], stack: S_TURN.concat(["Player::canPlay(layout)"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "chooseMove() reads the tile",
+        call: "Move move = player->chooseMove(m_layout, m_targetScore);\n  answer = View::readWord(\"Enter the tile to play ...\");",
+        loc: "round.cpp:193 → human.cpp:21 → view.cpp:128",
+        text: "<p>Virtual call into <code>Human::chooseMove</code>, same as the happy path. The player types <code>0-5</code>.</p>",
+        payload: `answer = "0-5"`,
+        out: [["p", PROMPT_TILE], ["i", "0-5"]], stack: S_HUMAN.concat(["View::readWord(prompt)"])
+      },
+      {
+        layer: "hand", from: "human", kind: "ok",
+        title: "Parse and look it up",
+        call: "Tile::fromString(\"0-5\", tile);   // true\nm_hand.contains(tile);           // true",
+        loc: "human.cpp:34-42 → tile.cpp:63, hand.cpp:58",
+        text: "<p>Both checks pass. The just-drawn tile is in the hand at index 7.</p>",
+        payload:
+`tile = Tile { 0, 5 }
+indexOf(0-5) → 7   contains → true`,
+        out: [], stack: S_HUMAN.concat(["Hand::contains(0-5)"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "askEnd(): player types L",
+        call: "char end = askEnd(layout, tile);",
+        loc: "human.cpp:43 → human.cpp:58-80",
+        text: "<p>Open ends are still just L and R.</p>",
+        payload:
+`open = "LR"
+answer = "L" → 'L'`,
+        out: [["p", "Where should 0-5 go? (LR): "], ["i", "L"]], stack: S_HUMAN.concat(["Human::askEnd(layout, 0-5)", "View::readWord(prompt)"])
+      },
+      {
+        layer: "layout", from: "human", kind: "ok",
+        title: "canPlace(0-5, 'L')",
+        call: "layout.canPlace(tile, end)",
+        loc: "human.cpp:44 → layout.cpp:109",
+        text: "<p>The Left end shows the <i>left</i> pip of the first tile on the line.</p>",
+        payload:
+`getEndPips('L') = m_line.front().getLeftPips() = 0
+0 == 0 ✔  → true
+return Move(0-5, 'L')`,
+        out: [], stack: S_HUMAN.concat(["Layout::canPlace(0-5, 'L')"])
+      },
+      {
+        layer: "layout", from: "round", kind: "ok",
+        title: "place(): flip and insert at the front",
+        call: "m_layout.place(move);",
+        loc: "round.cpp:194 → layout.cpp:168-179",
+        text: "<p>On the Left end the new tile's <i>right</i> pip must touch the line. <code>0-5</code> has a 5 on the right, so it's flipped to <code>5-0</code> and inserted at index 0. If there were a spinner, <code>m_spinnerIndex</code> would shift by one.</p>",
+        payload:
+`case LEFT:
+  tile.getRightPips() = 5 ≠ 0 → flipped → 5-0
+  m_line.insert(begin, 5-0)
+  hasSpinner()? no;  5-0 is a double? no
+
+m_line: [0-4, 4-6] → [5-0, 0-4, 4-6]`,
+        out: [], stack: S_TURN.concat(["Layout::place(move)"])
+      },
+      {
+        layer: "layout", from: "round", kind: "ok",
+        title: "removeTile, then count the open ends",
+        call: "player->removeTile(move.tile);\nint sum = m_layout.getOpenEndSum();",
+        loc: "round.cpp:198-199 → hand.cpp:93, layout.cpp:75",
+        text: "<p>The hand goes back to 7 tiles. Open ends are now 5 (Left) and 6 (Right).</p>",
+        payload:
+`hand: [1-3, 1-5, 2-4, 2-3, 2-2, 3-5, 1-4]
+L: endValue(5-0, 5) = 5
+R: endValue(4-6, 6) = 6
+sum = 11`,
+        out: [], stack: S_TURN.concat(["Layout::getOpenEndSum()"])
+      },
+      {
+        layer: "round", from: "layout", kind: "io",
+        title: "No points this time",
+        call: "int points = (sum % m_targetScore == 0) ? sum : 0;   // 0\nplayer->addRoundPoints(points);\nView::message(note);",
+        loc: "round.cpp:200-209",
+        text: "<p>11 isn't a multiple of 5, so the player gets 0 points. <code>addRoundPoints(0)</code> is still called and returns true.</p>",
+        payload:
+`11 % 5 = 1 → points = 0
+Human.m_roundScore stays 0`,
+        out: [["o", "Human placed 0-5 at the Left. Open-end total is 11: no points."]], stack: S_TURN.concat(["View::message(note)"])
+      },
+      {
+        layer: "serializer", from: "tournament", kind: "ok",
+        title: "Save: see what the draws changed",
+        call: "// play(): m_next = 1, readYesNo → y → SAVE_REQUESTED\nround.toState(...);  Serializer::save(state, \"mygame.txt\");",
+        loc: "round.cpp:131-134 → tournament.cpp:91-101 → serializer.cpp:11",
+        text: "<p>Compare with the file you started from. The two drawn tiles are gone from the <b>front</b> of the boneyard, <code>1-4</code> is now at the <b>end</b> of the human's hand (drawn tiles are appended), and <code>0-5</code> is on the table as <code>5-0</code>.</p>",
+        payload:
+`--- mygame.txt ---
+Tournament Score: 7
+
+Target Score: 5
+
+Computer:
+   Hand: 1-1 5-6 1-2 6-6 3-4 3-3
+   Current Score: 10
+   Tournament Score: 0
+
+Human:
+   Hand: 1-3 1-5 2-4 2-3 2-2 3-5 1-4
+   Current Score: 0
+   Tournament Score: 0
+
+Layout:   L 5-0 0-4 4-6 R
+
+Boneyard:  0-2 0-0 4-4 5-5 0-1 0-3 4-5 2-6 1-6 3-6 2-5 0-6
+
+Next Player: Computer`,
+        out: [["p", "Save the game and quit? (y/n): "], ["i", "y"], ["p", "Enter a file name to save to: "], ["i", "mygame.txt"], ["o", "Game saved to 'mygame.txt'. Goodbye!"]],
+        stack: ["main()", "Tournament::run()", "Tournament::saveAndQuit(round)", "Serializer::save(state, \"mygame.txt\")"],
+        quiz: { q: "If the boneyard had been empty when the human couldn't play, what would <code>takeTurn</code> return, and what happens if the computer then can't play either?", a: "<code>drawTile</code> returns false, so <code>takeTurn</code> prints \"… passes.\" and returns false. <code>play()</code> increments <code>m_consecutivePasses</code>. If the computer also passes, it reaches 2 (= <code>PLAYER_COUNT</code>), the round prints \"Neither player can place a tile.\" and calls <code>finish()</code>." }
+      }
+    ]
+  },
+
+  {
+    id: "error", name: "Validation errors", sub: "Bad text, wrong tile, wrong end, bad letter", color: "var(--err)",
+    file: "onboarding/saves/happy-path.txt",
+    inputs: ["y", "onboarding/saves/happy-path.txt", "5_6", "0-0", "2-4", "L", "5-6", "Q", "r"],
+    steps: [
+      resumeStep("onboarding/saves/happy-path.txt", GS_A),
+      {
+        layer: "human", from: "round", kind: "info",
+        title: "Turn starts: canPlay() is true, chooseMove() begins",
+        call: "showTable();\nwhile (!player->canPlay(m_layout)) {...}   // skipped\nMove move = player->chooseMove(m_layout, m_targetScore);",
+        loc: "round.cpp:113 → round.cpp:182 → round.cpp:193 → human.cpp:19",
+        text: "<p>Same position as the happy path. Now the player makes four different mistakes. <code>Human::chooseMove</code> is a <code>while (true)</code> loop that returns only when the move is legal. Each mistake prints a message and <code>continue</code>s the loop.</p>",
+        payload:
+`hand = [1-6, 1-5, 2-4, 3-6, 2-2, 5-6]
+open ends: L=0, R=6`,
+        out: TABLE_A, stack: S_HUMAN
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Player types 5_6 (underscore, not dash)",
+        call: "answer = View::readWord(\"Enter the tile to play ...\");",
+        loc: "human.cpp:21 → view.cpp:128",
+        text: "<p>Any text is accepted at this layer. <code>View</code> doesn't know what a tile is.</p>",
+        payload: `answer = "5_6"`,
+        out: [["p", PROMPT_TILE], ["i", "5_6"]], stack: S_HUMAN.concat(["View::readWord(prompt)"])
+      },
+      {
+        layer: "tile", from: "human", kind: "err",
+        title: "Rejected by Tile::fromString",
+        call: "if (!Tile::fromString(answer, tile)) {\n    View::message(\"  That is not a tile. ...\");\n    continue;\n}",
+        loc: "human.cpp:35-38 → tile.cpp:65",
+        text: "<p>The length is 3, but the middle character isn't <code>'-'</code>. <code>9-9</code> would fail too, one step later, inside <code>setPips</code> (9 is outside 0–6). Nothing has changed yet, and the loop asks again.</p>",
+        payload:
+`text = "5_6"
+  length == 3      ✔
+  text[1] == '-'   ✘  ('_')
+returns false  → tile unchanged → message → continue`,
+        out: [["o", "  That is not a tile. Type two pip counts joined by a dash, like 2-5."]], stack: S_HUMAN.concat(["Tile::fromString(\"5_6\", tile)"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Player types 0-0",
+        call: "answer = View::readWord(...);",
+        loc: "human.cpp:21",
+        text: "<p>A well-formed tile this time.</p>",
+        payload: `answer = "0-0"`,
+        out: [["p", PROMPT_TILE], ["i", "0-0"]], stack: S_HUMAN.concat(["View::readWord(prompt)"])
+      },
+      {
+        layer: "hand", from: "human", kind: "err",
+        title: "Rejected by Hand::contains",
+        call: "if (!m_hand.contains(tile)) {\n    View::message(\"  \" + tile.toString() + \" is not in your hand.\");\n    continue;\n}",
+        loc: "human.cpp:39-42 → hand.cpp:58",
+        text: "<p><code>fromString</code> passed (<code>Tile{0,0}</code>), but <code>0-0</code> is in the boneyard, not the player's hand.</p>",
+        payload:
+`tile = Tile { 0, 0 }
+hand = [1-6, 1-5, 2-4, 3-6, 2-2, 5-6]
+indexOf(0-0) → NOT_FOUND (-1)  → contains = false`,
+        out: [["o", "  0-0 is not in your hand."]], stack: S_HUMAN.concat(["Hand::contains(0-0)"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Player types 2-4, then L",
+        call: "answer = View::readWord(...);          // \"2-4\" → fromString ✔ → contains ✔\nchar end = askEnd(layout, tile);       // \"L\"",
+        loc: "human.cpp:21-43 → human.cpp:58",
+        text: "<p><code>2-4</code> is a real tile in the hand. <code>askEnd</code> offers <code>LR</code> even though <code>2-4</code> fits neither. It only lists open ends.</p>",
+        payload:
+`tile = Tile { 2, 4 }   contains → true (index 2)
+open = "LR"   end = 'L'`,
+        out: [["p", PROMPT_TILE], ["i", "2-4"], ["p", "Where should 2-4 go? (LR): "], ["i", "L"]], stack: S_HUMAN.concat(["Human::askEnd(layout, 2-4)"])
+      },
+      {
+        layer: "layout", from: "human", kind: "err",
+        title: "Rejected by Layout::canPlace",
+        call: "if (!layout.canPlace(tile, end)) {\n    View::message(\"  2-4 does not match the \" + std::to_string(layout.getEndPips(end)) + ...);\n    continue;\n}",
+        loc: "human.cpp:44-49 → layout.cpp:109-121",
+        text: "<p>The end shows 0, and the tile has 2 and 4. The message uses <code>getEndPips</code> to show the player what the end needs. The whole question starts over from the tile prompt.</p>",
+        payload:
+`getEndPips('L') = 0
+2 == 0 ?  no
+4 == 0 ?  no
+canPlace → false → message → continue`,
+        out: [["o", "  2-4 does not match the 0 at the Left end."]], stack: S_HUMAN.concat(["Layout::canPlace(2-4, 'L')"])
+      },
+      {
+        layer: "view", from: "human", kind: "io",
+        title: "Player types 5-6",
+        call: "answer = View::readWord(...);   // \"5-6\" → fromString ✔ → contains ✔",
+        loc: "human.cpp:21-42",
+        text: "<p>A good tile.</p>",
+        payload: `tile = Tile { 5, 6 }   contains → true (index 5)`,
+        out: [["p", PROMPT_TILE], ["i", "5-6"]], stack: S_HUMAN.concat(["View::readWord(prompt)"])
+      },
+      {
+        layer: "human", from: "human", kind: "err",
+        title: "askEnd(): Q is rejected, r is accepted",
+        call: "while (true) {\n    answer = View::readWord(\"Where should 5-6 go? (LR): \");\n    if (answer.length() == 1) { letter = toupper(answer[0]); if (open.find(letter) != npos) return letter; }\n    View::message(\"  Please type one of: \" + open);\n}",
+        loc: "human.cpp:69-79",
+        text: "<p><code>askEnd</code> has its <b>own</b> inner loop, so a bad letter re-asks only for the end, not the tile. Lower-case <code>r</code> is accepted because of <code>toupper</code>.</p>",
+        payload:
+`answer "Q" → 'Q'  "LR".find('Q') = npos  ✘ → message, ask again
+answer "r" → 'R'  "LR".find('R') = 1     ✔ → return 'R'`,
+        out: [["p", "Where should 5-6 go? (LR): "], ["i", "Q"], ["o", "  Please type one of: LR"], ["p", "Where should 5-6 go? (LR): "], ["i", "r"]],
+        stack: S_HUMAN.concat(["Human::askEnd(layout, 5-6)"])
+      },
+      {
+        layer: "layout", from: "human", kind: "ok",
+        title: "canPlace ✔ → Move → place",
+        call: "layout.canPlace(5-6, 'R');   // true\nreturn Move(tile, 'R');\n// back in Round::takeTurn:\nm_layout.place(move);   // stored as 6-5",
+        loc: "human.cpp:44-50 → round.cpp:194 → layout.cpp:156",
+        text: "<p>From here the turn is the same as the happy path.</p><p>Note the safety net in <code>Round::takeTurn</code>: if <code>place</code> ever returned false, the player would forfeit the turn with \"offered an illegal move\". Because <code>Human</code> already validated, that branch never runs for humans. It's <b>defence in depth</b> (a second layer of checks in case the first one fails).</p>",
+        payload:
+`Move { tile: 5-6, end: 'R', valid: true }
+m_line: [0-4, 4-6] → [0-4, 4-6, 6-5]`,
+        out: [], stack: S_TURN.concat(["Layout::place(move)"])
+      },
+      {
+        layer: "round", from: "layout", kind: "io",
+        title: "Score and report",
+        call: "sum = m_layout.getOpenEndSum();   // 5\npoints = 5;  player->addRoundPoints(5);\nView::message(note);",
+        loc: "round.cpp:198-209",
+        text: "<p>Four mistakes cost nothing. The player still scores 5. None of the rejected inputs changed any game data, because every check happens <b>before</b> anything is modified.</p>",
+        payload:
+`sum = 0 + 5 = 5 → 5 % 5 == 0 → points = 5
+Human.m_roundScore: 0 → 5`,
+        out: [["o", "Human placed 5-6 at the Right. Open-end total is 5, a multiple of 5: 5 points!"], ["p", "Save the game and quit? (y/n): "]],
+        stack: S_TURN.concat(["View::message(note)"]),
+        quiz: { q: "Which class rejected each bad input: <code>5_6</code>, <code>0-0</code>, <code>2-4</code> at L, and <code>Q</code>?", a: "<code>5_6</code>: <code>Tile::fromString</code>. <code>0-0</code>: <code>Hand::contains</code>. <code>2-4</code> at L: <code>Layout::canPlace</code>. <code>Q</code>: <code>Human::askEnd</code> (not in the open-ends list). All the messages are printed through <code>View::message</code>." }
+      }
+    ]
+  }
+];
+
+// ---------- state ----------
+let scenarioIndex = 0;
+let stepIndex = 0;
+let timer = null;
+
+const $ = (id) => document.getElementById(id);
+
+function buildTabs() {
+  const tabs = $("tabs");
+  tabs.innerHTML = "";
+  SCENARIOS.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", i === scenarioIndex ? "true" : "false");
+    b.innerHTML = '<span class="dot" style="background:' + s.color + '"></span><b></b><small></small>';
+    b.querySelector("b").textContent = (i + 1) + ". " + s.name;
+    b.querySelector("small").textContent = s.sub;
+    b.addEventListener("click", () => selectScenario(i));
+    tabs.appendChild(b);
+  });
+}
+
+function buildLayers() {
+  const box = $("layers");
+  box.innerHTML = "";
+  LAYERS.forEach((l) => {
+    const d = document.createElement("div");
+    d.className = "layer";
+    d.id = "layer-" + l.id;
+    d.innerHTML = '<div class="name"></div><div class="file"></div><div class="method"></div>';
+    d.querySelector(".name").textContent = l.name;
+    d.querySelector(".file").textContent = l.file;
+    box.appendChild(d);
+  });
+}
+
+function buildStrip() {
+  const strip = $("strip");
+  strip.innerHTML = "";
+  SCENARIOS[scenarioIndex].steps.forEach((st, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = i;
+    b.title = i + ". " + st.title;
+    b.addEventListener("click", () => { stop(); go(i); });
+    strip.appendChild(b);
+  });
+}
+
+function buildRepro() {
+  const s = SCENARIOS[scenarioIndex];
+  const el = $("scenarioRepro");
+  el.innerHTML = "";
+  const p = document.createElement("p");
+  p.style.margin = "8px 0 0";
+  p.innerHTML = "Start the save file <code></code> and type these answers, one per line:";
+  p.querySelector("code").textContent = s.file;
+  const pre = document.createElement("pre");
+  pre.textContent = "make && ./program\n" + s.inputs.map((x) => "  " + x).join("\n") +
+    "\n\n# or pipe them in (output only, no prompts shown as you type):\nprintf '" + s.inputs.join("\\n") + "\\n' | ./program";
+  el.appendChild(p);
+  el.appendChild(pre);
+}
+
+function layerName(id) {
+  const l = LAYERS.find((x) => x.id === id);
+  return l ? l.name.split(" ")[0] : id;
+}
+
+function methodLabel(step) {
+  const top = step.stack[step.stack.length - 1] || "";
+  return top;
+}
+
+function renderTerminal(steps, upto) {
+  const term = $("terminal");
+  term.innerHTML = "";
+  let line = null;
+  function newLine(isNew) {
+    line = document.createElement("div");
+    if (isNew) line.className = "new";
+    term.appendChild(line);
+    return line;
+  }
+  for (let s = 0; s <= upto; s++) {
+    const isNew = s === upto;
+    let pendingPrompt = null;
+    steps[s].out.forEach(([kind, text]) => {
+      if (kind === "o") {
+        const l = newLine(isNew);
+        l.textContent = text === "" ? " " : text;
+      } else if (kind === "p") {
+        pendingPrompt = newLine(isNew);
+        pendingPrompt.appendChild(document.createTextNode(text));
+      } else if (kind === "i") {
+        const target = pendingPrompt || newLine(isNew);
+        const span = document.createElement("span");
+        span.className = "in";
+        span.textContent = text;
+        target.appendChild(span);
+        pendingPrompt = null;
+      }
+    });
+  }
+  term.scrollTop = term.scrollHeight;
+}
+
+function go(i) {
+  const s = SCENARIOS[scenarioIndex];
+  stepIndex = Math.max(0, Math.min(i, s.steps.length - 1));
+  const step = s.steps[stepIndex];
+
+  // layers
+  const visited = new Set(s.steps.slice(0, stepIndex).map((x) => x.layer));
+  LAYERS.forEach((l) => {
+    const el = $("layer-" + l.id);
+    el.className = "layer";
+    el.querySelector(".method").textContent = "";
+    if (visited.has(l.id)) el.classList.add("visited");
+    if (step.from === l.id && step.from !== step.layer) el.classList.add("from");
+  });
+  const cur = $("layer-" + step.layer);
+  cur.classList.remove("visited");
+  cur.classList.add("current");
+  if (step.kind === "err") cur.classList.add("err");
+  cur.querySelector(".method").textContent = methodLabel(step);
+  if (step.out.some(([k]) => k === "i")) {
+    const t = $("layer-term");
+    t.classList.add("from");
+    t.querySelector(".method").textContent = "typing…";
+  }
+
+  // detail
+  const badge = $("badge");
+  const labels = { ok: "success", err: "rejected", io: "input / output", info: "control flow" };
+  badge.className = "badge " + step.kind;
+  badge.textContent = labels[step.kind];
+  $("hop").textContent = step.from && step.from !== step.layer
+    ? layerName(step.from) + " → " + layerName(step.layer)
+    : layerName(step.layer);
+  $("title").textContent = stepIndex + ". " + step.title;
+  $("call").textContent = step.call;
+  $("loc").textContent = "📄 " + step.loc;
+  $("explain").innerHTML = step.text;
+  $("payload").textContent = step.payload;
+
+  const stack = $("stack");
+  stack.innerHTML = "";
+  step.stack.forEach((f) => {
+    const li = document.createElement("li");
+    li.textContent = f;
+    stack.appendChild(li);
+  });
+
+  const quiz = $("quiz");
+  if (step.quiz) {
+    quiz.hidden = false;
+    quiz.innerHTML = "<b>Check yourself:</b> " + step.quiz.q + "<details><summary>Show answer</summary><div style=\"margin-top:6px\"></div></details>";
+    quiz.querySelector("details div").innerHTML = step.quiz.a;
+  } else {
+    quiz.hidden = true;
+  }
+
+  renderTerminal(s.steps, stepIndex);
+
+  // controls
+  $("counter").textContent = "Step " + stepIndex + " of " + (s.steps.length - 1);
+  $("prevBtn").disabled = stepIndex === 0;
+  $("firstBtn").disabled = stepIndex === 0;
+  $("nextBtn").disabled = stepIndex === s.steps.length - 1;
+  Array.from($("strip").children).forEach((b, k) => {
+    b.className = (k === stepIndex ? "cur" : k < stepIndex ? "done" : "") + (s.steps[k].kind === "err" ? " err" : "");
+  });
+}
+
+function selectScenario(i) {
+  stop();
+  scenarioIndex = i;
+  buildTabs();
+  buildStrip();
+  buildRepro();
+  go(0);
+}
+
+function stop() {
+  if (timer) { clearInterval(timer); timer = null; }
+  $("playBtn").textContent = "▶ Play";
+}
+
+function togglePlay() {
+  if (timer) { stop(); return; }
+  const s = SCENARIOS[scenarioIndex];
+  if (stepIndex >= s.steps.length - 1) go(0);
+  $("playBtn").textContent = "⏸ Pause";
+  timer = setInterval(() => {
+    if (stepIndex >= SCENARIOS[scenarioIndex].steps.length - 1) { stop(); return; }
+    go(stepIndex + 1);
+  }, 2600);
+}
+
+$("nextBtn").addEventListener("click", () => { stop(); go(stepIndex + 1); });
+$("prevBtn").addEventListener("click", () => { stop(); go(stepIndex - 1); });
+$("firstBtn").addEventListener("click", () => { stop(); go(0); });
+$("playBtn").addEventListener("click", togglePlay);
+document.addEventListener("keydown", (e) => {
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+  if (e.key === "ArrowRight") { stop(); go(stepIndex + 1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { stop(); go(stepIndex - 1); e.preventDefault(); }
+  else if (e.key === "Home") { stop(); go(0); }
+  else if (e.key === " ") { togglePlay(); e.preventDefault(); }
+  else if (["1", "2", "3"].includes(e.key)) { selectScenario(Number(e.key) - 1); }
+});
+
+$("themeBtn").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme
+    ? root.dataset.theme === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("sim-theme", root.dataset.theme); } catch (e) { /* storage unavailable */ }
+});
+try {
+  const saved = localStorage.getItem("sim-theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+} catch (e) { /* storage unavailable */ }
+
+buildLayers();
+selectScenario(0);
+</script>
+</body>
+</html>
