@@ -15,7 +15,7 @@
                 "reveal": "silent",
                 "clear": true
             },
-            "detail": "Compile with the Makefile (Windows via WSL, Linux, or macOS)"
+            "detail": "Compile with the Makefile (Windows, Linux, or macOS)"
         },
         {
             "label": "build",

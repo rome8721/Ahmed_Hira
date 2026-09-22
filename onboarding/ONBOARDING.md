@@ -53,7 +53,7 @@ The computer plays itself using a simple strategy (take the biggest score, other
 > | Database | A **text save file** on disk, read and written by `Serializer` |
 > | Config | The `Makefile`, `.vscode/*.json`, and `static const` numbers in the code (hand size, targets, pip range) |
 > | External services | **None.** No network, no database server, no third-party libraries. Only the C++ standard library, the keyboard, the screen, and files |
-> | Deployable | One executable file named `program` |
+> | Deployable | One executable file: `program.exe` on Windows, `program` on Mac/Linux |
 
 ---
 
@@ -155,50 +155,67 @@ All code is in [`src/`](../src/): 12 `.cpp` files and 13 headers, about 2,300 li
 
 ## 4. Build, run, and debug locally
 
-This project is written for Unix-style tools (`make`, `g++`, a bash shell). **On Windows, use WSL** ("Windows Subsystem for Linux"). It runs a real Ubuntu Linux inside Windows, so every command in this folder works exactly as written. VS Code connects to it seamlessly.
+On Windows you'll install three free tools:
 
-### 4.1 One-time setup on Windows (about 60 minutes)
+| Tool | What it gives you |
+|---|---|
+| **Git for Windows** | `git` to download the code, plus **Git Bash**, a terminal where every command in this course works (`grep`, `printf`, `sed`, `./program`) |
+| **MSYS2** | The C++ compiler (`g++`), the debugger (`gdb`) and `make` |
+| **VS Code** | The editor, with a built-in terminal and debugger |
 
-1. **Install WSL with Ubuntu.** Open **PowerShell as Administrator** (Start menu → type "PowerShell" → right-click → *Run as administrator*) and run:
-   ```powershell
-   wsl --install
-   ```
-   Restart when asked. After the restart an **Ubuntu** window opens and asks you to pick a Linux username and password. Remember the password, because `sudo` will ask for it.
-2. **Install the compiler, make, the debugger and git** in the Ubuntu window:
+### 4.1 One-time setup on Windows (about 45 minutes)
+
+**Step 1: install Git for Windows.** Download it from https://git-scm.com/download/win and run the installer. Accept all the default options.
+
+**Step 2: install MSYS2.** Download the installer from https://www.msys2.org and run it. Keep the default folder, **`C:\msys64`**, because the project's settings expect it.
+
+**Step 3: install the compiler, debugger and make.**
+1. From the Start menu, open **"MSYS2 UCRT64"**. It must be the one with *UCRT64* in the name. A black terminal window opens.
+2. Type this and press Enter. Press Enter again to accept, and `Y` to confirm:
    ```sh
-   sudo apt update
-   sudo apt install -y build-essential clang gdb git
+   pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64-ucrt-x86_64-make
    ```
-   (`build-essential` gives you `g++` and `make`. `clang` is there because the VS Code settings point IntelliSense at `clang++`.)
-3. **Get the code into your Linux home folder** (not under `C:\`: it's much faster, and it avoids Windows line-ending problems):
+3. Then run this one line. MSYS2 names its make tool `mingw32-make`, and this copy lets you type plain `make` like the rest of the course:
    ```sh
-   cd ~
-   git clone <repo-url> Ahmed_Hira     # your mentor gives you the URL, or copies the folder
-   cd Ahmed_Hira
+   cp /ucrt64/bin/mingw32-make.exe /ucrt64/bin/make.exe
    ```
-4. **Install VS Code on Windows** (code.visualstudio.com), then install the **WSL** extension (by Microsoft).
-5. **Open the project from Ubuntu:**
-   ```sh
-   cd ~/Ahmed_Hira
-   code .
-   ```
-   VS Code opens with **"WSL: Ubuntu"** in the bottom-left corner. That means it's working inside Linux.
-6. When VS Code offers the **recommended extensions** (from [.vscode/extensions.json](../.vscode/extensions.json)), click *Install*. They install into WSL:
-   - *C/C++* (`ms-vscode.cpptools`): code navigation
-   - *CodeLLDB* (`vadimcn.vscode-lldb`): the debugger
-7. *(Optional)* a Mermaid preview extension, so the diagrams render inside VS Code.
+4. Close the MSYS2 window. You won't need it again.
 
-**Terminal** means the Ubuntu window, or VS Code's built-in terminal (`` Ctrl+` ``), which is already inside WSL. Windows PowerShell and Command Prompt won't work for the commands below.
+**Step 4: let Windows find the tools.**
+1. Start menu → type **"environment"** → click **"Edit environment variables for your account"**.
+2. In the top list, select **Path** → **Edit…** → **New** → type `C:\msys64\ucrt64\bin` → **OK** → **OK**.
 
-> **Mentor on macOS:** install the Command Line Tools with `xcode-select --install`, open the folder in VS Code, and everything else is the same. The Makefile adds the macOS SDK flag automatically.
+**Step 5: install VS Code** from https://code.visualstudio.com (default options).
+
+**Step 6: check the tools, then download the code.** From the Start menu, open **Git Bash**. Open a *new* one, so it picks up the Path change from step 4. Then run:
+```sh
+g++ --version      # should print a version number
+gdb --version
+make --version
+cd ~
+git clone https://github.com/rome8721/Ahmed_Hira.git
+cd Ahmed_Hira
+code .
+```
+If a `--version` line says "command not found", step 4 didn't take effect. Recheck the Path entry, then close and reopen Git Bash.
+
+**Step 7: in VS Code.**
+1. If VS Code asks whether you trust the authors of the folder, choose **Yes**.
+2. When it offers to install the **recommended extensions**, click **Install**. The one you need is **C/C++** (by Microsoft). CodeLLDB is only used on Mac and Linux, so you can skip it.
+3. Open the terminal: **Terminal → New Terminal** (or `` Ctrl+` ``). The terminal tab should say **bash**, because the project tells VS Code to use Git Bash. If it says *powershell*, click the **˅** next to the **+** in the terminal panel and choose **Git Bash**.
+4. *(Optional)* install a Mermaid preview extension, so the diagrams render inside VS Code.
+
+From now on, **"the terminal"** means Git Bash, either inside VS Code (best) or the Git Bash window. PowerShell and Command Prompt won't understand the commands in this course.
+
+> **Mentor on macOS or Linux:** install a compiler (macOS: `xcode-select --install`; Ubuntu: `sudo apt install build-essential gdb`), open the folder in VS Code, and use the matching *macOS* or *Linux* debug configuration. The Makefile adapts to each system automatically.
 
 ### 4.2 Build and run from the terminal
 
 ```sh
 cd ~/Ahmed_Hira        # the repo root
-make                   # compiles every src/*.cpp into ./program
-./program              # or: make run
-make clean             # deletes ./program (and program.dSYM on macOS)
+make                   # compiles every src/*.cpp into program.exe
+./program              # runs it (Windows finds program.exe). Or: make run
+make clean             # deletes the compiled program
 ```
 
 A clean build prints one long `g++ ...` line and **no warnings**. If you see warnings after a change, read them: the flags `-Wall -Wextra` turn on most warnings on purpose.
@@ -222,23 +239,24 @@ Enter the save file name: onboarding/saves/happy-path.txt
 ```
 File names are relative to the folder you started the program from.
 
-**Quit early:** press `Ctrl+D` (end of input). The program prints "Input closed. Goodbye." and exits. `Ctrl+C` also works.
+**Quit early:** press `Ctrl+C`.
 
 **Feed answers automatically** (handy for repeating a scenario). The program reads each line as if you typed it:
 ```sh
 printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program
 ```
 
+**Open the simulator:** in File Explorer go to your `Ahmed_Hira\onboarding` folder and double-click `simulator.html`, or run `start onboarding/simulator.html` in Git Bash.
+
 ### 4.4 Debug in VS Code (step by step)
 
-1. Open the project from WSL (`code .` in `~/Ahmed_Hira`), and check that the corner says "WSL: Ubuntu".
-2. Open [src/round.cpp](../src/round.cpp). Click in the margin left of the line number at `Round::takeTurn` (the `while (!player->canPlay(m_layout))` line, around line 182). A red dot is a **breakpoint**: the program will pause there.
-3. Open the **Run and Debug** panel (the play-with-bug icon, or `Ctrl+Shift+D`).
-4. Choose **"Debug program (Windows WSL / Linux, CodeLLDB)"** from the dropdown and press the green ▶ (or `F5`).
+1. Open [src/round.cpp](../src/round.cpp). Click in the margin left of the line number at `Round::takeTurn` (the `while (!player->canPlay(m_layout))` line, around line 182). A red dot is a **breakpoint**: the program will pause there.
+2. Open the **Run and Debug** panel (the play-with-bug icon, or `Ctrl+Shift+D`).
+3. Choose **"Debug program (Windows, gdb)"** from the dropdown and press the green ▶ (or `F5`).
    - It first runs the task **build (make)**, which runs `make`. The Makefile compiles with `-g`, which adds debug info so the debugger can map machine code back to your source lines.
-   - The other two configurations are for macOS. Their build task uses a Mac-only path and fails on Windows.
-5. The program runs in the **integrated terminal** at the bottom. **Type your answers there** (for example `y`, then `onboarding/saves/happy-path.txt`).
-6. When it pauses on your breakpoint:
+   - The *Linux* and *macOS* configurations don't work on Windows.
+4. **A separate console window opens.** That's your program. **Type your answers in that window** (for example `y`, then `onboarding/saves/happy-path.txt`). VS Code's own panels only show the debugger.
+5. When it pauses on your breakpoint (VS Code comes to the front):
    - **Variables** panel: inspect `player`, `m_layout`, `m_boneyard`. Expand them.
    - `F10` **Step Over**: run this line, stop on the next.
    - `F11` **Step Into**: go inside the function called on this line.
@@ -246,9 +264,11 @@ printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program
    - `F5` **Continue**: run until the next breakpoint.
    - `Ctrl+Shift+F5` **Restart**. `Shift+F5` **Stop**.
    - **Call Stack** panel: which functions called which to get here.
-7. While paused in a function that's waiting for input (`View::readLine`), the program looks frozen. It's waiting for you to type in the terminal.
+6. While the program waits for input (`View::readLine`), nothing happens in VS Code. Switch to the console window and type.
 
-> ⚠️ **Trap:** `Ctrl+Shift+B` (the default build shortcut) runs the task *"C/C++: clang++ build active file"*. That compiles **only the file you have open**, so it fails with "undefined reference" linker errors. Use `make` in the terminal, the task **build (make)** (Terminal → Run Task…), or just press F5 with the WSL configuration selected.
+> ⚠️ **Trap:** `Ctrl+Shift+B` (the default build shortcut) runs the task *"C/C++: clang++ build active file"*, which is set up for Mac and fails on Windows. Build with `make` in the terminal, with the task **build (make)** (Terminal → Run Task…), or just press F5 with the Windows configuration selected.
+
+> **If F5 says it can't find gdb:** MSYS2 isn't installed in `C:\msys64`. Either reinstall it there, or change `miDebuggerPath` in [.vscode/launch.json](../.vscode/launch.json) to where `gdb.exe` actually is.
 
 ---
 

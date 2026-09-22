@@ -16,7 +16,7 @@ Try the small "Predict" questions as you go. Answers are at the bottom.
 ## 1. What a C++ program is
 
 - The code is in **text files**. `.cpp` files hold the code that runs. `.h` files ("headers") hold *declarations*: a list of what exists, so other files can use it.
-- A **compiler** (`g++`) turns all the `.cpp` files into one runnable file. Here that's `program`. You run `make`, which runs `g++` for you (see the [Makefile](../Makefile)).
+- A **compiler** (`g++`) turns all the `.cpp` files into one runnable file. Here that's `program.exe` on Windows (`program` on Mac and Linux). You run `make`, which runs `g++` for you (see the [Makefile](../Makefile)).
 - Execution always starts at a function called `main`. Here it's in [src/main.cpp](../src/main.cpp):
 
 ```cpp

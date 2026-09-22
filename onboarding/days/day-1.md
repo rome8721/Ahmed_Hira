@@ -6,7 +6,7 @@
 
 | Block | Time |
 |---|---|
-| Setup: WSL, compiler, VS Code | 60 min |
+| Setup: Git, compiler, VS Code | 60 min |
 | The story: read ONBOARDING, play the game | 60 min |
 | C++ primer, Part 1 | 75 min |
 | The map: architecture, class guide, header tour | 75 min |
@@ -18,7 +18,7 @@
 
 | Order | File | Why | Time |
 |---|---|---|---|
-| 1 | [ONBOARDING.md §4.1–4.3](../ONBOARDING.md#4-build-run-and-debug-locally) | Set up WSL and build the program | 60 min (doing) |
+| 1 | [ONBOARDING.md §4.1–4.3](../ONBOARDING.md#4-build-run-and-debug-locally) | Install the tools and build the program | 60 min (doing) |
 | 2 | [ONBOARDING.md](../ONBOARDING.md) §1 (what the app does) and §2 (glossary). Skim the C++ words table; the primer explains them properly | The story and the vocabulary | 30 min |
 | 3 | [cpp-primer.md](../cpp-primer.md) **Part 1** (sections 1–7) | How the programming ideas you know are written in C++ | 75 min |
 | 4 | [diagrams/architecture.md](../diagrams/architecture.md), diagram 1 only | The map | 20 min |
@@ -37,7 +37,7 @@
 
 ### 1. Set up, build and run (60 min)
 
-Follow [ONBOARDING.md §4.1](../ONBOARDING.md#41-one-time-setup-on-windows-about-60-minutes) step by step. Ask your mentor if anything fails. Setup problems are normal, and they aren't the point of the day.
+Follow [ONBOARDING.md §4.1](../ONBOARDING.md#41-one-time-setup-on-windows-about-45-minutes) step by step. Ask your mentor if anything fails. Setup problems are normal, and they aren't the point of the day.
 
 ```sh
 cd ~/Ahmed_Hira
@@ -47,7 +47,8 @@ make
 ```
 
 - [ ] The build prints one `g++ ...` line and **no warnings**.
-- [ ] VS Code shows "WSL: Ubuntu" in the bottom-left corner.
+- [ ] VS Code's terminal tab says **bash** (Git Bash), not powershell.
+- [ ] `start onboarding/simulator.html` opens the simulator in your browser (just check it opens; you'll use it on Day 2).
 
 ### 2. Play the game (30 min)
 

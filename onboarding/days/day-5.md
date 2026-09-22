@@ -55,7 +55,7 @@ make clean && make
 > **Reported by:** a player
 > **Steps:** Resume `onboarding/saves/empty-boneyard.txt`. It's the Human's turn and none of the Human's tiles fit.
 > **Expected:** "Human cannot play and the boneyard is empty. Human passes." Then the Computer plays.
-> **Actual:** the program dies. In the terminal: `Segmentation fault (core dumped)` (exit code 139, check with `echo $?`). Run from VS Code, the debugger should stop at the crash, reported as a `SIGSEGV` signal (macOS calls it `EXC_BAD_ACCESS`).
+> **Actual:** the program suddenly quits with no goodbye message. Depending on the terminal you may see `Segmentation fault`, or nothing at all. `echo $?` straight afterwards prints a non-zero number. Run with the debugger (F5), gdb stops at the crash with `SIGSEGV, Segmentation fault`.
 > **Category:** missing null / empty check
 
 **Jargon:** a **segmentation fault** ("segfault") means the program touched memory it doesn't own. In C++, a common cause is using something that doesn't exist: dereferencing a null pointer, or reading `front()` of an empty `std::vector`. C++ doesn't check for you. The code has to.

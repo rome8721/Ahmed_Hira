@@ -16,14 +16,14 @@ flowchart TB
     subgraph BUILD["Build and tooling (not shipped)"]
         MK["Makefile<br/>make / make run / make clean"]
         VSC[".vscode/tasks.json + launch.json<br/>build task, CodeLLDB debug"]
-        CXX["g++ (clang on macOS), C++17"]
+        CXX["g++, C++17<br/>MinGW on Windows, clang on macOS"]
         MK --> CXX
         VSC --> CXX
     end
 
     CXX -->|"compiles src/*.cpp"| EXE
 
-    subgraph EXE["Deployable: ./program (single executable)"]
+    subgraph EXE["Deployable: program.exe on Windows, program on Mac/Linux"]
         MAIN["main()<br/>src/main.cpp"]
 
         subgraph CONTROL["Control layer"]

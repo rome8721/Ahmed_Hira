@@ -11,7 +11,7 @@
 | File | Why | Time |
 |---|---|---|
 | [ONBOARDING.md §4.4](../ONBOARDING.md#44-debug-in-vs-code-step-by-step) | Debugger controls refresher | 10 min |
-| [.vscode/launch.json](../../.vscode/launch.json) (the *Windows WSL / Linux* configuration) and the **build (make)** task in [.vscode/tasks.json](../../.vscode/tasks.json) | What F5 actually does: run `make` (which compiles with `-g`), then launch `./program` in the integrated terminal | 15 min |
+| [.vscode/launch.json](../../.vscode/launch.json) (the *Windows, gdb* configuration) and the **build (make)** task in [.vscode/tasks.json](../../.vscode/tasks.json) | What F5 actually does: run `make` (which compiles with `-g`), then start `program.exe` under the `gdb` debugger in a separate console window | 15 min |
 | [diagrams/request-flow.md](../diagrams/request-flow.md) | Your map for placing breakpoints | 10 min |
 | [diagrams/round-end.md](../diagrams/round-end.md) | For the pass/round-end exercise | 15 min |
 
@@ -46,12 +46,14 @@ Set these breakpoints (click left of the line number). Line numbers are approxim
 
 ### 1. Happy path in the debugger (60 min)
 
-Select **Debug program (Windows WSL / Linux, CodeLLDB)**, press F5 → type `y` → `onboarding/saves/happy-path.txt`.
+Select **Debug program (Windows, gdb)**, press F5. A console window opens: type `y`, then `onboarding/saves/happy-path.txt` there.
+
+> Remember: **all typing goes into the separate console window**, and all inspecting happens in VS Code. Arrange the two windows side by side.
 
 At each stop, write down the values in the **Watch these** column. Then:
 
 - At **B4** press **F11** (Step Into). Which function do you land in? Look at the **Call Stack**.
-- Continue to **B5**. Type `5-6` in the terminal first (the program is waiting in `View::readLine`).
+- Continue to **B5**. Type `5-6` in the console window first (the program is waiting in `View::readLine`).
 - At **B8**, press **F10** a few times and watch `tile` change from `5-6` to `6-5` when `flipped()` runs.
 - At **B10**, what are `sum` and `points`?
 - Answer `n` to "Save the game and quit?". Now the computer's turn starts. At **B4** press F11 again: this time you land in `Computer::chooseMove`. Same line, different function. That's polymorphism, live.
@@ -98,7 +100,7 @@ Stop anywhere inside `Layout::canPlace` during a **human** turn, and again durin
 ## Answer key
 
 1. `player` is a `Player*`, but `chooseMove` is **virtual**, so the call is dispatched at run time on the object's real type. `m_players[0]` points to `Tournament::m_human` and `m_players[1]` to `Tournament::m_computer`.
-2. The program is waiting for input in `View::readLine` → `std::getline(std::cin, …)`. Click into the **terminal** panel and type your answer.
+2. The program is waiting for input in `View::readLine` → `std::getline(std::cin, …)`. Switch to the program's **console window** (it may be behind VS Code) and type your answer.
 3. `-g` adds debug information (the map from machine code back to source lines and variable names). Without it, breakpoints don't bind and variables can't be shown. No optimisation (the default, same as `-O0`) keeps the machine code in the same order as your source. With optimisation (`-O2`), lines get reordered or merged and variables show as "optimized out", so stepping jumps around confusingly.
 4. Before: `m_leftPips = 5, m_rightPips = 6` (5-6). After: `m_leftPips = 6, m_rightPips = 5` (6-5).
 5. The human passes (`takeTurn` returns false), so `m_consecutivePasses` becomes **1**. If the computer then places a tile, it goes back to **0**. If the computer also can't play, it reaches **2** (`PLAYER_COUNT`) and the round ends with "Neither player can place a tile." In this file the computer holds 20 tiles and can play, so the count resets to 0. The round then continues until someone goes out, or both players are blocked.

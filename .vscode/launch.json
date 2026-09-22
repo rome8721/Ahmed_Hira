@@ -2,7 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug program (Windows WSL / Linux, CodeLLDB)",
+      "name": "Debug program (Windows, gdb)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/program.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "Show std::vector and std::string contents nicely",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build (make)"
+    },
+    {
+      "name": "Debug program (Linux, CodeLLDB)",
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/program",
@@ -12,7 +32,7 @@
       "preLaunchTask": "build (make)"
     },
     {
-      "name": "Debug program (CodeLLDB)",
+      "name": "Debug program (macOS, CodeLLDB)",
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/program",
@@ -22,7 +42,7 @@
       "preLaunchTask": "build"
     },
     {
-      "name": "Debug program (C/C++ extension, external Terminal)",
+      "name": "Debug program (macOS, C/C++ extension, external Terminal)",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/program",

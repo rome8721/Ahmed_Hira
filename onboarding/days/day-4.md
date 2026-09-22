@@ -60,12 +60,12 @@ There are no `.env` or settings files for the *game*. Its configuration is:
 | | `Tile::MIN_PIPS`, `MAX_PIPS` in [tile.h](../../src/tile.h) | 0, 6 |
 | | `Boneyard::FULL_SET_SIZE` in [boneyard.h](../../src/boneyard.h) | 28 (documentation only, not used in logic) |
 | | `Tournament::MIN/MAX_TOURNAMENT_SCORE` in [tournament.h](../../src/tournament.h) | 1, 10000 |
-| Build | [Makefile](../../Makefile) `CXX`, `CXXFLAGS`, `SRC`, `HDR`, `TARGET` | `g++`, `-std=c++17 -Wall -Wextra -g` (plus a macOS-only `-isysroot` flag added by the `ifeq` block), `program`. Rebuilds when any `.cpp` or `.h` changes |
+| Build | [Makefile](../../Makefile) `CXX`, `CXXFLAGS`, `SRC`, `HDR`, `TARGET` | `g++`, `-std=c++17 -Wall -Wextra -g`. The `ifeq` blocks pick `program.exe` on Windows, `program` elsewhere, and add a macOS-only `-isysroot` flag. Rebuilds when any `.cpp` or `.h` changes |
 | IDE build | tasks in [tasks.json](../../.vscode/tasks.json) | **build (make)** just runs `make` (use this one). **build** is the original macOS task, with the compiler flags written out a second time |
-| Debug | [launch.json](../../.vscode/launch.json) | *Windows WSL / Linux* configuration: runs `${workspaceFolder}/program`, `cwd` = repo root, pre-launch task **build (make)** |
+| Debug | [launch.json](../../.vscode/launch.json) | *Windows, gdb* configuration: runs `${workspaceFolder}/program.exe` under `C:/msys64/ucrt64/bin/gdb.exe`, `cwd` = repo root, in a separate console window, pre-launch task **build (make)** |
 | Runtime choices (typed by the user) | `Tournament::run` | tournament score, target 3/5, save-file names |
 
-Changing a constant means **recompiling**. Also note that the Makefile and the macOS `build` task each list the compiler flags: change one and the other can silently drift. That's why the Windows configuration calls `make` instead of repeating them.
+Changing a constant means **recompiling**. Also note that the Makefile and the macOS `build` task each list the compiler flags: change one and the other can silently drift. That's why the **build (make)** task calls `make` instead of repeating them.
 
 **One rule that isn't in any config file:** the save-file format is **fixed by the course**. Code may read and write it, but must never change its layout.
 

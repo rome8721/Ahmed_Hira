@@ -1,5 +1,6 @@
 # Build output
 program
+program.exe
 program.dSYM/
 *.o
 
