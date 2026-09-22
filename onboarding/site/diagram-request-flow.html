@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request flow: one human turn · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body data-page="diagram-request-flow">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<p class="muted"><a href="index.html#diagrams">← All diagrams</a></p><h1 id="request-flow-one-human-turn">Request flow: one human turn</h1>
+<p>The single most important flow in the program is <strong>one turn</strong>: the player types a tile and an end, and the program checks it, places it, scores it, and reports back. The whole program is this flow run in a loop, with <code>Computer</code> in place of <code>Human</code> every other time.</p>
+<p>In web terms: the "UI click" is the player typing <code>5-6</code> and <code>R</code>, the "controller" is <code>Round</code>, the "validation" is <code>Tile</code>, <code>Hand</code> and <code>Layout</code>, and the "database write" is changing the in-memory <code>Layout</code>, <code>Hand</code> and score. Writing to disk happens only if the player then chooses to save (see <a href="diagram-save-game.html">Secondary workflow: save and quit (the &quot;database write&quot;)</a>).</p>
+<p><strong>Sample data</strong> comes from <a href="../saves/happy-path.txt"><code>saves/happy-path.txt</code></a>: target 5, table <code>L 0-4 4-6 R</code> (open ends L=0, R=6), human hand <code>1-6 1-5 2-4 3-6 2-2 5-6</code>. The human types <code>5-6</code> then <code>R</code>. You can reproduce it exactly:</p>
+<pre class="highlight"><code class="language-sh">make &amp;&amp; ./program      # then: y, onboarding/saves/happy-path.txt, 5-6, R</code></pre>
+<h2 id="sequence-diagram">Sequence diagram</h2>
+<div class="mermaid">sequenceDiagram
+    autonumber
+    actor U as Player (terminal)
+    participant T as Tournament
+    participant R as Round
+    participant P as Human (a Player)
+    participant V as View
+    participant Ti as Tile
+    participant H as Hand
+    participant L as Layout
+    participant B as Boneyard
+
+    T-&gt;&gt;R: play()
+    Note over R: current = m_players[m_next] (the Human)
+    R-&gt;&gt;V: showLayout(m_layout), showHand(...) x2, message(...)
+    V--&gt;&gt;U: prints table, both hands, boneyard, scores
+    R-&gt;&gt;R: takeTurn(current)
+
+    rect rgba(128,128,128,0.12)
+    Note over R,B: Draw loop. Skipped in the happy path because the human can already play
+    loop while canPlay(m_layout) is false
+        R-&gt;&gt;P: canPlay(m_layout)
+        P-&gt;&gt;L: canPlace(tile, end) for every tile x L/R/U/D
+        L--&gt;&gt;P: false for all
+        P--&gt;&gt;R: false
+        R-&gt;&gt;B: drawTile(drawn)
+        alt boneyard empty
+            B--&gt;&gt;R: false
+            R-&gt;&gt;V: message("... passes.")
+            R--&gt;&gt;R: return false (pass)
+        else drew a tile
+            B--&gt;&gt;R: true, drawn = front tile
+            R-&gt;&gt;P: addTile(drawn)
+            R-&gt;&gt;V: message("... draws X from the boneyard.")
+        end
+    end
+    end
+
+    R-&gt;&gt;P: canPlay(m_layout)
+    P-&gt;&gt;L: canPlace(1-6, 'L') false, canPlace(1-6, 'R') true
+    P--&gt;&gt;R: true
+
+    R-&gt;&gt;P: chooseMove(m_layout, 5)  [virtual call, runs Human::chooseMove]
+    loop until the input is legal
+        P-&gt;&gt;V: readWord("Enter the tile to play ...")
+        V--&gt;&gt;U: prompt
+        U--&gt;&gt;V: types "5-6"
+        V--&gt;&gt;P: "5-6"
+        P-&gt;&gt;Ti: Tile::fromString("5-6", tile)
+        Ti--&gt;&gt;P: true, tile = 5-6
+        P-&gt;&gt;H: m_hand.contains(5-6)
+        H--&gt;&gt;P: true (found at index 5)
+        P-&gt;&gt;P: askEnd(layout, 5-6)
+        P-&gt;&gt;L: isOpenEnd('L'/'R'/'U'/'D')
+        L--&gt;&gt;P: open = "LR"
+        P-&gt;&gt;V: readWord("Where should 5-6 go? (LR): ")
+        U--&gt;&gt;V: types "R"
+        V--&gt;&gt;P: "R" then toupper gives 'R'
+        P-&gt;&gt;L: canPlace(5-6, 'R')
+        L-&gt;&gt;L: getEndPips('R') = 6, tile has a 6
+        L--&gt;&gt;P: true
+    end
+    P--&gt;&gt;R: Move{tile 5-6, end 'R', valid true}
+
+    R-&gt;&gt;L: place(move)
+    L-&gt;&gt;L: canPlace again, then flip 5-6 to 6-5 so 6 touches 6, push_back
+    L--&gt;&gt;R: true (line is now 0-4 4-6 6-5)
+    R-&gt;&gt;P: removeTile(5-6)
+    P-&gt;&gt;H: removeTile(5-6)
+    H--&gt;&gt;P: true
+    R-&gt;&gt;L: getOpenEndSum()
+    L--&gt;&gt;R: 5  (L end 0 + R end 5)
+    Note over R: points = (5 mod 5 == 0) ? 5 : 0, so 5
+    R-&gt;&gt;P: addRoundPoints(5)
+    R-&gt;&gt;V: message("Human placed 5-6 at the Right. Open-end total is 5, a multiple of 5: 5 points!")
+    V--&gt;&gt;U: prints result
+    R--&gt;&gt;R: takeTurn returns true
+
+    Note over R: back in play(): passes = 0, hand not empty, m_next = 1 (Computer)
+    R-&gt;&gt;V: readYesNo("Save the game and quit?")
+    V--&gt;&gt;U: prompt
+    alt player answers y
+        R--&gt;&gt;T: return SAVE_REQUESTED, see save-game.md
+    else player answers n
+        R-&gt;&gt;R: loop again, now the Computer's turn (see computer-turn.md)
+    end</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/request-flow.md">diagrams/request-flow.md</a>.</p>
+<h2 id="the-same-flow-as-a-numbered-checklist-with-fileline">The same flow as a numbered checklist (with file:line)</h2>
+<p>Line numbers are from the current code and may drift a little.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Where</th>
+<th>What happens</th>
+<th>Data at this point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tournament.cpp#L53" data-code="src/tournament.cpp" data-line="53" class="code-link">tournament.cpp:53</a> <code>round.play()</code></td>
+<td>Tournament hands control to the round</td>
+<td><code>m_targetScore = 5</code>, <code>m_next = 0</code> (Human)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L112-L115" data-code="src/round.cpp" data-line="112" class="code-link">round.cpp:112–115</a> <code>Round::play</code></td>
+<td>Pick the current player, print the table, call <code>takeTurn</code></td>
+<td><code>current</code> = <code>&amp;m_human</code> (seen through a <code>Player*</code>)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L182" data-code="src/round.cpp" data-line="182" class="code-link">round.cpp:182</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.cpp#L16" data-code="src/player.cpp" data-line="16" class="code-link">player.cpp:16</a> <code>Player::canPlay</code></td>
+<td>Can any tile go anywhere? If not, draw (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/boneyard.cpp#L99" data-code="src/boneyard.cpp" data-line="99" class="code-link">boneyard.cpp:99</a>) or pass</td>
+<td><code>true</code>: <code>1-6</code> fits on R</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L193" data-code="src/round.cpp" data-line="193" class="code-link">round.cpp:193</a> <code>player-&gt;chooseMove(...)</code></td>
+<td>Virtual call. C++ runs <code>Human::chooseMove</code> because the object is a <code>Human</code></td>
+<td><code>layout = L 0-4 4-6 R</code>, <code>targetScore = 5</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L21" data-code="src/human.cpp" data-line="21" class="code-link">human.cpp:21</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.cpp#L128" data-code="src/view.cpp" data-line="128" class="code-link">view.cpp:128</a> <code>View::readWord</code></td>
+<td>Print prompt, read a line, return its first word</td>
+<td><code>answer = "5-6"</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L35" data-code="src/human.cpp" data-line="35" class="code-link">human.cpp:35</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.cpp#L63" data-code="src/tile.cpp" data-line="63" class="code-link">tile.cpp:63</a> <code>Tile::fromString</code></td>
+<td>Must be exactly <code>digit-digit</code>, each 0–6</td>
+<td><code>tile = {left 5, right 6}</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L39" data-code="src/human.cpp" data-line="39" class="code-link">human.cpp:39</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp#L58" data-code="src/hand.cpp" data-line="58" class="code-link">hand.cpp:58</a> <code>Hand::contains</code></td>
+<td>Is it in the hand? (<code>5-6</code> and <code>6-5</code> count as the same tile)</td>
+<td><code>indexOf = 5</code>, so <code>true</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L43" data-code="src/human.cpp" data-line="43" class="code-link">human.cpp:43</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L58" data-code="src/human.cpp" data-line="58" class="code-link">human.cpp:58</a> <code>Human::askEnd</code></td>
+<td>List open ends, read a letter, upper-case it</td>
+<td><code>open = "LR"</code>, <code>end = 'R'</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L44" data-code="src/human.cpp" data-line="44" class="code-link">human.cpp:44</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp#L109" data-code="src/layout.cpp" data-line="109" class="code-link">layout.cpp:109</a> <code>Layout::canPlace</code></td>
+<td>Does a pip on the tile equal the pips at that end?</td>
+<td><code>getEndPips('R') = 6</code>, so <code>true</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp#L50" data-code="src/human.cpp" data-line="50" class="code-link">human.cpp:50</a> <code>return Move(tile, end)</code></td>
+<td>Package the decision</td>
+<td><code>Move{5-6, 'R', valid=true}</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L194" data-code="src/round.cpp" data-line="194" class="code-link">round.cpp:194</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp#L156" data-code="src/layout.cpp" data-line="156" class="code-link">layout.cpp:156</a> <code>Layout::place</code></td>
+<td>Re-check, flip if needed, append</td>
+<td>stored as <code>6-5</code>, line = <code>0-4 4-6 6-5</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L198" data-code="src/round.cpp" data-line="198" class="code-link">round.cpp:198</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp#L93" data-code="src/hand.cpp" data-line="93" class="code-link">hand.cpp:93</a> <code>Hand::removeTile</code></td>
+<td>Take it out of the hand</td>
+<td>hand = <code>1-6 1-5 2-4 3-6 2-2</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L199" data-code="src/round.cpp" data-line="199" class="code-link">round.cpp:199</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp#L75" data-code="src/layout.cpp" data-line="75" class="code-link">layout.cpp:75</a> <code>getOpenEndSum</code></td>
+<td>Add up open ends</td>
+<td><code>0 + 5 = 5</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L200-L201" data-code="src/round.cpp" data-line="200" class="code-link">round.cpp:200–201</a> → <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.cpp#L45" data-code="src/player.cpp" data-line="45" class="code-link">player.cpp:45</a></td>
+<td>Score if it's a multiple of the target</td>
+<td><code>5 % 5 == 0</code>, so <code>m_roundScore 0 → 5</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L209" data-code="src/round.cpp" data-line="209" class="code-link">round.cpp:209</a> <code>View::message</code></td>
+<td>Tell the player</td>
+<td>"…Open-end total is 5, a multiple of 5: 5 points!"</td>
+</tr>
+<tr>
+<td>16</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp#L116-L134" data-code="src/round.cpp" data-line="116" class="code-link">round.cpp:116–134</a></td>
+<td>Reset passes, check for empty hand, switch player, offer save</td>
+<td><code>m_next = 1</code> (Computer)</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="validation-who-rejects-what">Validation: who rejects what</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Bad input</th>
+<th>Rejected by</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>5_6</code>, <code>abc</code>, <code>56</code></td>
+<td><code>Tile::fromString</code> (wrong shape)</td>
+<td>"That is not a tile. Type two pip counts joined by a dash, like 2-5."</td>
+</tr>
+<tr>
+<td><code>9-9</code></td>
+<td><code>Tile::fromString</code> → <code>Tile::setPips</code> (out of range 0–6)</td>
+<td>same as above</td>
+</tr>
+<tr>
+<td><code>0-0</code> when you don't hold it</td>
+<td><code>Hand::contains</code></td>
+<td>"0-0 is not in your hand."</td>
+</tr>
+<tr>
+<td><code>2-4</code> on the L end showing 0</td>
+<td><code>Layout::canPlace</code></td>
+<td>"2-4 does not match the 0 at the Left end."</td>
+</tr>
+<tr>
+<td><code>Q</code> as an end</td>
+<td><code>Human::askEnd</code> (not in the open-ends list)</td>
+<td>"Please type one of: LR"</td>
+</tr>
+<tr>
+<td>An illegal move that got past the Human</td>
+<td><code>Layout::place</code> returns false in <code>Round::takeTurn</code></td>
+<td>"…offered an illegal move and forfeits the turn." (safety net: shouldn't happen)</td>
+</tr>
+</tbody>
+</table></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

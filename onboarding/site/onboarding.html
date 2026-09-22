@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding: 35 Domino (C++) · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="onboarding">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html" class="cur">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="onboarding-35-domino-c">Onboarding: 35 Domino (C++)</h1>
+<p>Welcome! This folder teaches you this codebase in 6 days. By the end you should be able to:</p>
+<ol>
+<li>explain what the program does and how a turn flows through the code,</li>
+<li>trace one turn through every class in a debugger, and</li>
+<li>make a small change on your own.</li>
+</ol>
+<p><strong>How to use this folder</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="index.html"><code>site/index.html</code></a></td>
+<td><strong>The whole course as web pages. Start here each day.</strong> Open it with <code>start onboarding/site/index.html</code>. It has a home page with your progress, one page per day, checklists and answer boxes that are remembered, and code links that open in VS Code</td>
+</tr>
+<tr>
+<td><code>ONBOARDING.md</code> (this file)</td>
+<td>The overview: what the app does, vocabulary, where things live, how to build/run/debug</td>
+</tr>
+<tr>
+<td><a href="cpp-primer.html">C++ primer: just enough to read this codebase</a></td>
+<td>How basic programming ideas are written in C++, using examples from this code. Part 1 on Day 1, Part 2 on Day 2</td>
+</tr>
+<tr>
+<td><a href="index.html#diagrams"><code>diagrams/</code></a></td>
+<td>Mermaid diagrams. They render on GitHub, and in VS Code with a Mermaid preview extension</td>
+</tr>
+<tr>
+<td><a href="../simulator.html"><code>simulator.html</code></a></td>
+<td>Open it in any browser. Step through one turn, class by class, with sample data</td>
+</tr>
+<tr>
+<td><a href="index.html#days"><code>days/</code></a></td>
+<td>The 6-day plan. Do one file per day</td>
+</tr>
+<tr>
+<td><a href="../tools/build_site.py"><code>tools/build_site.py</code></a></td>
+<td>For the mentor: rebuilds <code>site/</code> after any <code>.md</code> file changes (<code>python3 onboarding/tools/build_site.py</code>)</td>
+</tr>
+<tr>
+<td><a href="../saves/"><code>saves/</code></a></td>
+<td>Save files that start the program at an exact moment in a game (used by the simulator scenarios and the debugger exercises)</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="1-what-the-app-does-from-a-players-point-of-view">1. What the app does (from a player's point of view)</h2>
+<p>It's a <strong>dominoes game you play in the terminal against the computer</strong>. The game is called <em>35 Domino</em>. There are no windows or buttons: the program prints text, and you type answers.</p>
+<p>A session goes like this:</p>
+<ol>
+<li>You start the program. It asks: <em>"Resume a saved game?"</em><ul>
+<li><strong>No:</strong> it asks what total to play to (the <em>tournament score</em>, for example 7).</li>
+<li><strong>Yes:</strong> it asks for a save-file name and continues that game from where it stopped.</li>
+</ul>
+</li>
+<li>Each <strong>round</strong> starts by asking for a <strong>target score</strong>: 3 or 5.</li>
+<li>The 28 dominoes are shuffled. You and the computer each get 7. The rest go face-down in a pile called the <strong>boneyard</strong>.</li>
+<li>You each draw one tile to decide who goes first. More pips (dots) goes first.</li>
+<li>On your turn you type a tile you hold (like <code>5-6</code>) and which end of the table to put it on (<code>L</code>, <code>R</code>, and later <code>U</code>/<code>D</code>). Its number has to match the number on that end.<ul>
+<li>If you can't play anything, the game automatically draws from the boneyard for you until you can. If the boneyard is empty, you <strong>pass</strong>.</li>
+<li>Type <code>help</code> and the computer suggests a move and tells you why.</li>
+</ul>
+</li>
+<li><strong>Scoring:</strong> after every placement, add up the pips on all open ends of the table. If that total is a multiple of the target (3 or 5), the player who just played scores that total.</li>
+<li>The round ends when someone plays their last tile, or when both players pass in a row. Whoever holds fewer pips gets a <strong>bonus</strong>: (heavier hand − lighter hand) ÷ target, rounded down.</li>
+<li>Round scores are added to tournament totals. When someone reaches the tournament score, the program names the winner (or a draw).</li>
+<li>After any placement you can choose <strong>save and quit</strong>. The game is written to a plain text file you can resume later.</li>
+</ol>
+<p>The computer plays itself using a simple strategy (take the biggest score, otherwise dump heavy tiles). It prints the reason for every move.</p>
+<blockquote>
+<p><strong>Note on terminology.</strong> Onboarding templates usually talk about "requests", "databases", "DTOs" and "external services". This project is a single console program, so those words map onto it like this:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Web/app term</th>
+<th>What it means here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UI / front end</td>
+<td>The terminal. All printing and reading happens in <code>View</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.cpp" data-code="src/view.cpp" data-line="" class="code-link">src/view.cpp</a>)</td>
+</tr>
+<tr>
+<td>A "request"</td>
+<td>One turn: the player types a tile and an end, and the program places it and scores it</td>
+</tr>
+<tr>
+<td>Controller</td>
+<td><code>Tournament</code> (whole session) and <code>Round</code> (one round, the referee)</td>
+</tr>
+<tr>
+<td>Domain model / entities</td>
+<td><code>Tile</code>, <code>Hand</code>, <code>Boneyard</code>, <code>Layout</code>, <code>Player</code></td>
+</tr>
+<tr>
+<td>DTO (data transfer object)</td>
+<td><code>GameState</code> and <code>PlayerState</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/gamestate.h" data-code="src/gamestate.h" data-line="" class="code-link">src/gamestate.h</a>): plain records that carry data between <code>Round</code> and the save file</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>A <strong>text save file</strong> on disk, read and written by <code>Serializer</code></td>
+</tr>
+<tr>
+<td>Config</td>
+<td>The <code>Makefile</code>, <code>.vscode/*.json</code>, and <code>static const</code> numbers in the code (hand size, targets, pip range)</td>
+</tr>
+<tr>
+<td>External services</td>
+<td><strong>None.</strong> No network, no database server, no third-party libraries. Only the C++ standard library, the keyboard, the screen, and files</td>
+</tr>
+<tr>
+<td>Deployable</td>
+<td>One executable file: <code>program.exe</code> on Windows, <code>program</code> on Mac/Linux</td>
+</tr>
+</tbody>
+</table></div>
+</blockquote>
+<hr />
+<h2 id="2-glossary">2. Glossary</h2>
+<h3 id="game-domain-terms">Game (domain) terms</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+<th>Where in code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tile / domino</strong></td>
+<td>One piece with two ends. Each end shows 0–6 dots. Written <code>2-5</code></td>
+<td><code>Tile</code></td>
+</tr>
+<tr>
+<td><strong>Pip</strong></td>
+<td>One dot on a tile. "5 pips" means the end shows 5</td>
+<td><code>m_leftPips</code>, <code>m_rightPips</code></td>
+</tr>
+<tr>
+<td><strong>Double</strong></td>
+<td>A tile whose two ends match, like <code>3-3</code></td>
+<td><code>Tile::isDouble()</code></td>
+</tr>
+<tr>
+<td><strong>Double-six set</strong></td>
+<td>The full set of 28 tiles from <code>0-0</code> to <code>6-6</code>. Each combination appears once</td>
+<td><code>Boneyard::reset()</code>, <code>FULL_SET_SIZE</code></td>
+</tr>
+<tr>
+<td><strong>Hand</strong></td>
+<td>The tiles one player holds</td>
+<td><code>Hand</code></td>
+</tr>
+<tr>
+<td><strong>Boneyard</strong></td>
+<td>The face-down pile of undealt tiles. Draws come from the front, returned tiles go to the back</td>
+<td><code>Boneyard</code></td>
+</tr>
+<tr>
+<td><strong>Layout</strong></td>
+<td>The tiles on the table</td>
+<td><code>Layout</code></td>
+</tr>
+<tr>
+<td><strong>Main line</strong></td>
+<td>The row of tiles running left to right</td>
+<td><code>Layout::m_line</code></td>
+</tr>
+<tr>
+<td><strong>End / open end</strong></td>
+<td>A place where a tile may be added. <code>L</code> left, <code>R</code> right, <code>U</code> up, <code>D</code> down</td>
+<td><code>Layout::LEFT/RIGHT/UP/DOWN</code>, <code>isOpenEnd()</code></td>
+</tr>
+<tr>
+<td><strong>Spinner</strong></td>
+<td>The first double played. It opens two extra ends, Up and Down</td>
+<td><code>m_spinnerIndex</code>, <code>hasSpinner()</code></td>
+</tr>
+<tr>
+<td><strong>Arm</strong></td>
+<td>The tiles growing out of the spinner, up or down</td>
+<td><code>m_up</code>, <code>m_down</code></td>
+</tr>
+<tr>
+<td><strong>Open-end total (open-end sum)</strong></td>
+<td>Sum of the pips showing at all open ends. A double at an end counts <strong>both</strong> its pips</td>
+<td><code>Layout::getOpenEndSum()</code></td>
+</tr>
+<tr>
+<td><strong>Target score</strong></td>
+<td>3 or 5, chosen each round. An open-end total that is a multiple of it scores points</td>
+<td><code>Round::m_targetScore</code></td>
+</tr>
+<tr>
+<td><strong>Round score / "Current Score"</strong></td>
+<td>Points a player earned so far in this round. Called "Current Score" in the save file</td>
+<td><code>Player::m_roundScore</code></td>
+</tr>
+<tr>
+<td><strong>Tournament score</strong></td>
+<td>⚠️ <strong>Two meanings!</strong> (1) The goal the whole session plays to (<code>GameState::tournamentScore</code>, <code>Tournament::m_tournamentScore</code>). (2) A player's running total from finished rounds (<code>Player::m_tournamentScore</code>, <code>PlayerState::tournamentScore</code>)</td>
+<td>See <a href="diagram-data-model.html">data-model</a></td>
+</tr>
+<tr>
+<td><strong>Draw</strong></td>
+<td>Take a tile from the boneyard because you can't play</td>
+<td><code>Boneyard::drawTile()</code> in <code>Round::takeTurn()</code></td>
+</tr>
+<tr>
+<td><strong>Pass</strong></td>
+<td>Can't play and the boneyard is empty, so your turn is skipped. Two passes in a row end the round</td>
+<td><code>Round::m_consecutivePasses</code></td>
+</tr>
+<tr>
+<td><strong>First-player draw</strong></td>
+<td>Each player draws one tile. Higher total starts. Both tiles go back on the bottom of the boneyard</td>
+<td><code>Round::chooseFirstPlayer()</code></td>
+</tr>
+<tr>
+<td><strong>Bonus</strong></td>
+<td>End of round: the lighter hand earns (heavier − lighter) ÷ target, rounded down</td>
+<td><code>Round::finish()</code></td>
+</tr>
+<tr>
+<td><strong>Help mode</strong></td>
+<td>The human types <code>help</code> or <code>h</code> and gets the computer's suggestion</td>
+<td><code>Human::chooseMove()</code> → <code>Computer::recommend()</code></td>
+</tr>
+<tr>
+<td><strong>Save file</strong></td>
+<td>Plain text snapshot of a game in progress. The repo file named <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/test" data-code="test" data-line="" class="code-link"><code>test</code></a> is one of these</td>
+<td><code>Serializer</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="project-specific-names">Project-specific names</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Model / Control / Players / I/O layers</strong></td>
+<td>How the author groups classes (see the <a href="../../doc/class-guides/00_All-Classes.pdf">class guide PDF</a>). The rule is that model classes never print or read. Only <code>View</code> does</td>
+</tr>
+<tr>
+<td><strong><code>View</code></strong></td>
+<td>A <em>namespace</em> (a named group of functions, not a class) that does all screen output and keyboard input</td>
+</tr>
+<tr>
+<td><strong><code>Move</code></strong></td>
+<td>A tiny record: a tile, an end letter, and <code>valid</code> (false means "no move")</td>
+</tr>
+<tr>
+<td><strong><code>GameState</code> / <code>PlayerState</code></strong></td>
+<td>Plain records holding everything in a save file</td>
+</tr>
+<tr>
+<td><strong><code>Serializer</code></strong></td>
+<td>Turns a <code>GameState</code> into save-file text and back. "Serialize" means convert data into text or bytes so it can be stored</td>
+</tr>
+<tr>
+<td><strong><code>recommend()</code></strong></td>
+<td>The computer's strategy function, shared with help mode</td>
+</tr>
+<tr>
+<td><strong><code>NO_SPINNER</code> (-1)</strong></td>
+<td>"No spinner yet". Also reused by <code>getEndPips()</code> to mean "that end is closed"</td>
+</tr>
+<tr>
+<td><strong>Selector / mutator</strong></td>
+<td>Course terms for <em>getter</em> (reads data, marked <code>const</code>) and <em>setter</em> (changes data)</td>
+</tr>
+<tr>
+<td><strong><code>m_</code> prefix</strong></td>
+<td>Marks a member variable (data stored inside an object), like <code>m_hand</code></td>
+</tr>
+<tr>
+<td><strong>Pseudocode comments</strong></td>
+<td>Every function has a plain-English outline above it. Read those first!</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="c-words-youll-meet-quick-definitions-the-c-primer-explains-them-with-examples">C++ words you'll meet (quick definitions; the <a href="cpp-primer.html">C++ primer</a> explains them with examples)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Header (<code>.h</code>) / source (<code>.cpp</code>)</strong></td>
+<td>The <code>.h</code> file <em>declares</em> a class (what it has). The <code>.cpp</code> file <em>defines</em> it (how each function works)</td>
+</tr>
+<tr>
+<td><strong>Include guard</strong></td>
+<td>The <code>#ifndef TILE_H / #define TILE_H / #endif</code> lines. They stop a header from being pasted in twice</td>
+</tr>
+<tr>
+<td><strong>Class / struct</strong></td>
+<td>A bundle of data and functions. <code>struct</code> is the same thing but public by default. Used here for plain records</td>
+</tr>
+<tr>
+<td><strong><code>const</code> method</strong></td>
+<td>A function that promises not to change the object</td>
+</tr>
+<tr>
+<td><strong><code>static</code> method</strong></td>
+<td>A function that belongs to the class, not to one object. Call it as <code>Tile::fromString(...)</code></td>
+</tr>
+<tr>
+<td><strong>Reference (<code>Tile&amp;</code>)</strong></td>
+<td>Another name for an existing variable. Functions use it to fill in a result, like <code>drawTile(Tile&amp; drawnTile)</code></td>
+</tr>
+<tr>
+<td><strong>Pointer (<code>Player*</code>)</strong></td>
+<td>A variable holding the <em>address</em> of an object. <code>Round</code> holds its two players as <code>Player*</code></td>
+</tr>
+<tr>
+<td><strong>Inheritance</strong></td>
+<td><code>class Human : public Player</code> means a Human <em>is a</em> Player and gets everything Player has</td>
+</tr>
+<tr>
+<td><strong><code>virtual</code> / pure virtual (<code>= 0</code>) / <code>override</code></strong></td>
+<td><code>virtual</code> lets a subclass replace a function. <code>= 0</code> means the base class has no version, so subclasses <em>must</em> provide one. <code>override</code> marks the replacement. This is how <code>Round</code> calls <code>chooseMove()</code> without knowing whether it's talking to a Human or a Computer (<strong>polymorphism</strong>)</td>
+</tr>
+<tr>
+<td><strong><code>std::vector</code></strong></td>
+<td>A resizable list</td>
+</tr>
+<tr>
+<td><strong><code>std::map</code></strong></td>
+<td>A lookup table from key to value. <code>GameState::players</code> maps a name to a <code>PlayerState</code></td>
+</tr>
+<tr>
+<td><strong>Copy constructor / <code>operator=</code></strong></td>
+<td>Code that runs when an object is copied. <code>Hand</code>, <code>Boneyard</code> and <code>Layout</code> define them</td>
+</tr>
+<tr>
+<td><strong>Return by value</strong></td>
+<td><code>getHand()</code> returns a <em>copy</em>. Changing the copy does not change the player's real hand</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="3-where-to-find-x">3. Where to find X</h2>
+<p>All code is in <a href="https://github.com/rome8721/Ahmed_Hira/tree/main/src"><code>src/</code></a>: 12 <code>.cpp</code> files and 13 headers, about 2,300 lines. There are no sub-projects and no libraries.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>I want to understand…</th>
+<th>Look in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Where the program starts</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/main.cpp" data-code="src/main.cpp" data-line="" class="code-link">src/main.cpp</a> → <code>main()</code> creates a <code>Tournament</code> and calls <code>run()</code></td>
+</tr>
+<tr>
+<td>The whole session (resume, tournament score, rounds loop, winner)</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tournament.cpp" data-code="src/tournament.cpp" data-line="" class="code-link">src/tournament.cpp</a> <code>Tournament::run()</code></td>
+</tr>
+<tr>
+<td>The turn loop, drawing, passing, scoring</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a> <code>Round::play()</code>, <code>Round::takeTurn()</code></td>
+</tr>
+<tr>
+<td>Dealing and who goes first</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a> <code>startNew()</code>, <code>dealHands()</code>, <code>chooseFirstPlayer()</code></td>
+</tr>
+<tr>
+<td>End-of-round bonus</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a> <code>Round::finish()</code></td>
+</tr>
+<tr>
+<td>How the human's typing becomes a move</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp" data-code="src/human.cpp" data-line="" class="code-link">src/human.cpp</a> <code>Human::chooseMove()</code>, <code>askEnd()</code></td>
+</tr>
+<tr>
+<td>Computer strategy / help mode</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/computer.cpp" data-code="src/computer.cpp" data-line="" class="code-link">src/computer.cpp</a> <code>Computer::recommend()</code></td>
+</tr>
+<tr>
+<td>Rules for where a tile may go</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp" data-code="src/layout.cpp" data-line="" class="code-link">src/layout.cpp</a> <code>canPlace()</code>, <code>place()</code>, <code>isOpenEnd()</code></td>
+</tr>
+<tr>
+<td>How points are counted on the table</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp" data-code="src/layout.cpp" data-line="" class="code-link">src/layout.cpp</a> <code>getOpenEndSum()</code></td>
+</tr>
+<tr>
+<td>The spinner and Up/Down arms</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.h" data-code="src/layout.h" data-line="" class="code-link">src/layout.h</a> (header comment), <code>Layout::place()</code></td>
+</tr>
+<tr>
+<td>One tile, parsing <code>"2-5"</code></td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.cpp" data-code="src/tile.cpp" data-line="" class="code-link">src/tile.cpp</a> <code>Tile::fromString()</code></td>
+</tr>
+<tr>
+<td>A player's tiles</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp" data-code="src/hand.cpp" data-line="" class="code-link">src/hand.cpp</a></td>
+</tr>
+<tr>
+<td>The draw pile and shuffling</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/boneyard.cpp" data-code="src/boneyard.cpp" data-line="" class="code-link">src/boneyard.cpp</a></td>
+</tr>
+<tr>
+<td>Shared player data (name, hand, scores)</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.h" data-code="src/player.h" data-line="" class="code-link">src/player.h</a>, <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.cpp" data-code="src/player.cpp" data-line="" class="code-link">src/player.cpp</a></td>
+</tr>
+<tr>
+<td>Everything printed or read</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.cpp" data-code="src/view.cpp" data-line="" class="code-link">src/view.cpp</a></td>
+</tr>
+<tr>
+<td>Save-file format (write and read)</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/serializer.cpp" data-code="src/serializer.cpp" data-line="" class="code-link">src/serializer.cpp</a></td>
+</tr>
+<tr>
+<td>What gets saved</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/gamestate.h" data-code="src/gamestate.h" data-line="" class="code-link">src/gamestate.h</a></td>
+</tr>
+<tr>
+<td>Model ↔ save record conversion</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a> <code>toState()</code>, <code>restore()</code>, plus <code>Layout::toString()/fromString()</code></td>
+</tr>
+<tr>
+<td>An example save file</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/test" data-code="test" data-line="" class="code-link"><code>test</code></a> (despite the name, it's a save file, not a test)</td>
+</tr>
+<tr>
+<td>Build settings</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/Makefile" data-code="Makefile" data-line="" class="code-link">Makefile</a>, <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/.vscode/tasks.json" data-code=".vscode/tasks.json" data-line="" class="code-link">.vscode/tasks.json</a></td>
+</tr>
+<tr>
+<td>Debugger settings</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/.vscode/launch.json" data-code=".vscode/launch.json" data-line="" class="code-link">.vscode/launch.json</a></td>
+</tr>
+<tr>
+<td>The author's dev log (design decisions, bugs they hit)</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/doc/log.md" data-code="doc/log.md" data-line="" class="code-link">doc/log.md</a></td>
+</tr>
+<tr>
+<td>One-page summary of every class</td>
+<td><a href="../../doc/class-guides/00_All-Classes.pdf">doc/class-guides/00_All-Classes.pdf</a></td>
+</tr>
+<tr>
+<td>Game constants (hand size 7, targets 3/5, pips 0–6, 28 tiles)</td>
+<td><code>Round::HAND_SIZE/MIN_TARGET/MAX_TARGET</code> in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.h" data-code="src/round.h" data-line="" class="code-link">round.h</a>, <code>Tile::MIN_PIPS/MAX_PIPS</code> in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.h" data-code="src/tile.h" data-line="" class="code-link">tile.h</a>, <code>Boneyard::FULL_SET_SIZE</code> in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/boneyard.h" data-code="src/boneyard.h" data-line="" class="code-link">boneyard.h</a>, <code>Tournament::MIN/MAX_TOURNAMENT_SCORE</code> in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tournament.h" data-code="src/tournament.h" data-line="" class="code-link">tournament.h</a></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="4-build-run-and-debug-locally">4. Build, run, and debug locally</h2>
+<p>On Windows you'll install three free tools:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it gives you</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Git for Windows</strong></td>
+<td><code>git</code> to download the code, plus <strong>Git Bash</strong>, a terminal where every command in this course works (<code>grep</code>, <code>printf</code>, <code>sed</code>, <code>./program</code>)</td>
+</tr>
+<tr>
+<td><strong>MSYS2</strong></td>
+<td>The C++ compiler (<code>g++</code>), the debugger (<code>gdb</code>) and <code>make</code></td>
+</tr>
+<tr>
+<td><strong>VS Code</strong></td>
+<td>The editor, with a built-in terminal and debugger</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="41-one-time-setup-on-windows-about-45-minutes">4.1 One-time setup on Windows (about 45 minutes)</h3>
+<p><strong>Step 1: install Git for Windows.</strong> Download it from https://git-scm.com/download/win and run the installer. Accept all the default options.</p>
+<p><strong>Step 2: install MSYS2.</strong> Download the installer from https://www.msys2.org and run it. Keep the default folder, <strong><code>C:\msys64</code></strong>, because the project's settings expect it.</p>
+<blockquote>
+<p>⏳ <strong>The last part of the installer can take up to 15 minutes and may look frozen.</strong> Don't close it. Wait until it says it's finished.</p>
+</blockquote>
+<p><strong>Step 3: install the compiler, debugger and make.</strong></p>
+<ol>
+<li>From the Start menu, open <strong>"MSYS2 UCRT64"</strong>. It must be the one with <em>UCRT64</em> in the name. A black terminal window opens.</li>
+<li>Type this and press Enter. Press Enter again to accept, and <code>Y</code> to confirm:
+    <pre class="highlight"><code class="language-sh">pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64-ucrt-x86_64-make</code></pre>
+    Red lines like <code>error: failed retrieving file '…' from mirror.msys2.org : Connection timed out</code> are <strong>normal</strong> if pacman then carries on to <code>installing …</code>: it just tried another download server. If it <strong>stops</strong> with an error instead, run the same command again.</li>
+<li>Then run this one line. MSYS2 names its make tool <code>mingw32-make</code>, and this copy lets you type plain <code>make</code> like the rest of the course:
+    <pre class="highlight"><code class="language-sh">cp /ucrt64/bin/mingw32-make.exe /ucrt64/bin/make.exe</code></pre></li>
+<li>Close the MSYS2 window. You won't need it again.</li>
+</ol>
+<p><strong>Step 4: let Windows find the tools.</strong></p>
+<ol>
+<li>Start menu → type <strong>"environment"</strong> → click <strong>"Edit environment variables for your account"</strong>.</li>
+<li>In the top list, select <strong>Path</strong> → <strong>Edit…</strong> → <strong>New</strong> → type <code>C:\msys64\ucrt64\bin</code>.</li>
+<li>With the new line still selected, click <strong>Move Up</strong> until it's at the <strong>top</strong> of the list. This matters if the computer already has another compiler installed: Windows uses the first one it finds.</li>
+<li>Click <strong>OK</strong>, then <strong>OK</strong> again.</li>
+<li><strong>Close every open VS Code and Git Bash window.</strong> Programs that were already open keep the old Path and won't find the new tools.</li>
+</ol>
+<p><strong>Step 5: install VS Code</strong> from https://code.visualstudio.com (default options).</p>
+<p><strong>Step 6: check the tools, then download the code.</strong> From the Start menu, open <strong>Git Bash</strong>. Open a <em>new</em> one, so it picks up the Path change from step 4. Then run:
+<pre class="highlight"><code class="language-sh">g++ --version      # should print a version number
+gdb --version
+make --version
+which g++ gdb make # all three lines must start with /c/msys64/ucrt64/bin
+cd ~
+git clone https://github.com/rome8721/Ahmed_Hira.git
+cd Ahmed_Hira
+code .</code></pre>
+Run these one line at a time. If a <code>--version</code> line says "command not found", step 4 didn't take effect: recheck the Path entry, then close and reopen Git Bash. If <code>which</code> shows a different folder, another compiler is ahead of MSYS2 in the Path: go back to step 4 and move <code>C:\msys64\ucrt64\bin</code> to the top.</p>
+<p><strong>Step 7: in VS Code.</strong></p>
+<ol>
+<li>If VS Code asks whether you trust the authors of the folder, choose <strong>Yes</strong>.</li>
+<li>Install the <strong>C/C++</strong> extension (by Microsoft). It's the only one you need. VS Code usually shows a pop-up offering the project's recommended extension: click <strong>Install</strong>. If you missed or closed the pop-up, press <code>Ctrl+Shift+X</code>, type <code>@recommended</code> in the search box, and click <strong>Install</strong> on <strong>C/C++</strong>.</li>
+<li>Open the terminal: press <code>Ctrl+`</code> (the key just below <code>Esc</code>). Or use the menu: <strong>Terminal → New Terminal</strong>. If you don't see a menu bar, click the <strong>☰</strong> icon at the top left first.
+    Check the prompt: it should contain <strong>MINGW64</strong> in purple, which means Git Bash. The project tells VS Code to use Git Bash. If the prompt starts with <code>PS C:\</code> instead (PowerShell), click the <strong>˅</strong> next to the <strong>+</strong> in the terminal panel and choose <strong>Git Bash</strong>.</li>
+<li><em>(Optional)</em> install a Mermaid preview extension, so the diagrams render inside VS Code.</li>
+</ol>
+<p>From now on, <strong>"the terminal"</strong> means Git Bash, either inside VS Code (best) or the Git Bash window. PowerShell and Command Prompt won't understand the commands in this course.</p>
+<blockquote>
+<p><strong>Mentor on macOS or Linux:</strong> install a compiler (macOS: <code>xcode-select --install</code>; Ubuntu: <code>sudo apt install build-essential gdb</code>), open the folder in VS Code, install the <strong>CodeLLDB</strong> extension (<code>vadimcn.vscode-lldb</code>), and use the matching <em>macOS</em> or <em>Linux</em> debug configuration. The Makefile adapts to each system automatically.</p>
+</blockquote>
+<h3 id="42-build-and-run-from-the-terminal">4.2 Build and run from the terminal</h3>
+<p>Run these <strong>one line at a time</strong>. <code>./program</code> starts the game and waits for your answers, so don't paste them all at once.</p>
+<pre class="highlight"><code class="language-sh">cd ~/Ahmed_Hira        # the repo root
+make                   # compiles every src/*.cpp into program.exe
+./program              # runs it (Windows finds program.exe). Or: make run</code></pre>
+<p>Later, when you want to throw away the compiled program and rebuild from scratch, use <code>make clean</code>. <strong>Not now</strong>: section 4.3 needs the program you just built.</p>
+<p>A clean build prints one long <code>g++ ...</code> line and <strong>no warnings</strong>. If you see warnings after a change, read them: the flags <code>-Wall -Wextra</code> turn on most warnings on purpose.</p>
+<p><code>make</code> rebuilds whenever any <code>.cpp</code> <strong>or <code>.h</code></strong> file changes. If you ever doubt whether your change was compiled, run <code>make clean &amp;&amp; make</code>.</p>
+<h3 id="43-try-it-5-minutes">4.3 Try it (5 minutes)</h3>
+<p><strong>New game:</strong> answer <code>n</code>, then <code>7</code> (tournament score), then <code>5</code> (target). Play a few turns. Type <code>help</code> at least once.</p>
+<p><strong>Resume the example save:</strong>
+<pre class="highlight"><code>Resume a saved game? (y/n): y
+Enter the save file name: test</code></pre>
+The computer moves first and plays <code>5-6</code> on the Right for 5 points.</p>
+<p><strong>Resume from a scenario used in this course:</strong>
+<pre class="highlight"><code>Enter the save file name: onboarding/saves/happy-path.txt</code></pre>
+File names are relative to the folder you started the program from.</p>
+<p><strong>Quit early:</strong> press <code>Ctrl+C</code>.</p>
+<p><strong>Feed answers automatically</strong> (handy for repeating a scenario). The program reads each line as if you typed it:
+<pre class="highlight"><code class="language-sh">printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program</code></pre></p>
+<p><strong>Open the course pages</strong> (the easiest way to follow the six days): <code>start onboarding/site/index.html</code>, or double-click <code>site\index.html</code> in the <code>onboarding</code> folder.</p>
+<p><strong>Open the simulator:</strong> in File Explorer go to your <code>Ahmed_Hira\onboarding</code> folder and double-click <code>simulator.html</code>, or run <code>start onboarding/simulator.html</code> in Git Bash.</p>
+<h3 id="44-debug-in-vs-code-step-by-step">4.4 Debug in VS Code (step by step)</h3>
+<ol>
+<li>Open <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a>. Click in the margin left of the line number at <code>Round::takeTurn</code> (the <code>while (!player-&gt;canPlay(m_layout))</code> line, around line 182). A red dot is a <strong>breakpoint</strong>: the program will pause there.</li>
+<li>Open the <strong>Run and Debug</strong> panel (the play-with-bug icon, or <code>Ctrl+Shift+D</code>).</li>
+<li>Choose <strong>"Debug program (Windows, gdb)"</strong> from the dropdown and press the green ▶ (or <code>F5</code>).<ul>
+<li>It first runs the task <strong>build (make)</strong>, which runs <code>make</code>. The Makefile compiles with <code>-g</code>, which adds debug info so the debugger can map machine code back to your source lines.</li>
+<li>The <em>Linux</em> and <em>macOS</em> configurations don't work on Windows.</li>
+</ul>
+</li>
+<li><strong>A separate console window opens.</strong> That's your program. <strong>Type your answers in that window</strong> (for example <code>y</code>, then <code>onboarding/saves/happy-path.txt</code>). VS Code's own panels only show the debugger.</li>
+<li>When it pauses on your breakpoint (VS Code comes to the front):<ul>
+<li><strong>Variables</strong> panel: <code>player</code> is listed directly. The round's own data (<code>m_layout</code>, <code>m_boneyard</code>, <code>m_next</code> and the rest) is inside <strong><code>this</code></strong>: click the arrow next to <code>this</code> to expand it.</li>
+<li>Don't be alarmed by nonsense values such as <code>points = 16777216</code>. Variables declared further down the function, like <code>sum</code>, <code>points</code> and <code>note</code>, hold leftover memory until their line runs.</li>
+<li><code>F10</code> <strong>Step Over</strong>: run this line, stop on the next.</li>
+<li><code>F11</code> <strong>Step Into</strong>: go inside the function called on this line.</li>
+<li><code>Shift+F11</code> <strong>Step Out</strong>: finish this function, return to the caller.</li>
+<li><code>F5</code> <strong>Continue</strong>: run until the next breakpoint.</li>
+<li><code>Ctrl+Shift+F5</code> <strong>Restart</strong>. <code>Shift+F5</code> <strong>Stop</strong>.</li>
+<li><strong>Call Stack</strong> panel: which functions called which to get here.</li>
+</ul>
+</li>
+<li>While the program waits for input (<code>View::readLine</code>), nothing happens in VS Code. Switch to the console window and type.</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>Trap:</strong> <code>Ctrl+Shift+B</code> (the default build shortcut) runs the task <em>"C/C++: clang++ build active file"</em>, which is set up for Mac and fails on Windows. Build with <code>make</code> in the terminal, with the task <strong>build (make)</strong> (<strong>Terminal → Run Task…</strong>, via <strong>☰</strong> if the menu bar is hidden), or just press F5 with the Windows configuration selected.</p>
+<p><strong>If F5 says it can't find gdb:</strong> MSYS2 isn't installed in <code>C:\msys64</code>. Either reinstall it there, or change <code>miDebuggerPath</code> in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/.vscode/launch.json" data-code=".vscode/launch.json" data-line="" class="code-link">.vscode/launch.json</a> to where <code>gdb.exe</code> actually is.</p>
+</blockquote>
+<hr />
+<h2 id="5-things-that-surprise-newcomers-read-before-day-2">5. Things that surprise newcomers (read before Day 2)</h2>
+<ul>
+<li><strong>Tiles get flipped on the table.</strong> Play <code>5-6</code> onto an end showing 6 and it's stored as <code>6-5</code>, so touching numbers sit next to each other. The save file shows <code>6-5</code>.</li>
+<li><strong>Getters return copies.</strong> <code>player-&gt;getHand().addTile(t)</code> changes a temporary copy and has no effect. Use <code>player-&gt;addTile(t)</code>.</li>
+<li><strong>"Tournament Score" means two different things</strong> in the save file, depending on whether the line is inside a player's block (see glossary).</li>
+<li><strong>Round never checks whether a player is Human or Computer.</strong> It calls <code>chooseMove()</code> and C++ picks the right version at run time.</li>
+<li><strong>Validation happens twice on purpose.</strong> <code>Human::chooseMove()</code> checks <code>Layout::canPlace()</code> before returning, and <code>Layout::place()</code> checks again. Model classes protect themselves.</li>
+<li><strong>The file named <code>test</code> is a save file</strong>, not a test suite. There are no automated tests. The author tested by playing and scripting input (see <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/doc/log.md" data-code="doc/log.md" data-line="" class="code-link">doc/log.md</a>).</li>
+<li><strong>Saving is offered only after a placement</strong>, never after a pass.</li>
+<li><strong>The save-file format is fixed by the course.</strong> Never add, remove, rename or reorder lines in it. Other programs and graders expect exactly this layout.</li>
+<li><strong>The human always draws first</strong> when deciding who starts (the human is <code>m_players[0]</code>).</li>
+</ul>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

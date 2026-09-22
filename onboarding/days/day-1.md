@@ -49,7 +49,8 @@ make
 
 - [ ] The build prints one `g++ ...` line and **no warnings**.
 - [ ] VS Code's terminal prompt shows **MINGW64** (Git Bash), not `PS C:\` (PowerShell).
-- [ ] `start onboarding/simulator.html` opens the simulator in your browser (just check it opens; you'll use it on Day 2).
+- [ ] `start onboarding/site/index.html` opens the course home page in your browser. From now on, you can follow each day there.
+- [ ] `start onboarding/simulator.html` opens the simulator (just check it opens; you'll use it on Day 2).
 
 ### 2. Play the game (30 min)
 

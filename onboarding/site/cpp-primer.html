@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ primer: just enough to read this codebase · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="cpp-primer">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html" class="cur">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="c-primer-just-enough-to-read-this-codebase">C++ primer: just enough to read this codebase</h1>
+<p>You know basic programming logic: variables, <code>if</code>, loops, functions. This primer shows how those ideas are <strong>written in C++</strong>, and then adds the few C++ features this project uses. Every example comes from the real code in <code>src/</code>, so each section also teaches you part of the game.</p>
+<p>You don't need to memorise this. Read it once, then come back when a line of code confuses you.</p>
+<ul>
+<li><strong>Part 1 (Day 1):</strong> sections 1–7, about 75 minutes</li>
+<li><strong>Part 2 (Day 2):</strong> sections 8–13, about 60 minutes</li>
+</ul>
+<p>Try the small "Predict" questions as you go. Answers are at the bottom.</p>
+<hr />
+<h1 id="part-1-the-basics-written-in-c">Part 1: the basics, written in C++</h1>
+<h2 id="1-what-a-c-program-is">1. What a C++ program is</h2>
+<ul>
+<li>The code is in <strong>text files</strong>. <code>.cpp</code> files hold the code that runs. <code>.h</code> files ("headers") hold <em>declarations</em>: a list of what exists, so other files can use it.</li>
+<li>A <strong>compiler</strong> (<code>g++</code>) turns all the <code>.cpp</code> files into one runnable file. Here that's <code>program.exe</code> on Windows (<code>program</code> on Mac and Linux). You run <code>make</code>, which runs <code>g++</code> for you (see the <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/Makefile" data-code="Makefile" data-line="" class="code-link">Makefile</a>).</li>
+<li>Execution always starts at a function called <code>main</code>. Here it's in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/main.cpp" data-code="src/main.cpp" data-line="" class="code-link">src/main.cpp</a>:</li>
+</ul>
+<pre class="highlight"><code class="language-cpp">#include "tournament.h"      // "paste in" the declarations from tournament.h
+
+int main() {
+    Tournament tournament;   // create a Tournament object
+    tournament.run();        // run the whole game
+    return 0;                // 0 means "finished normally"
+}</code></pre>
+<ul>
+<li><code>//</code> starts a comment. The compiler ignores it.</li>
+<li>Every statement ends with <code>;</code>. Blocks of code are wrapped in <code>{ }</code>.</li>
+<li>If you change code, you must <strong>recompile</strong> (<code>make</code>) before running again.</li>
+</ul>
+<h2 id="2-variables-and-types">2. Variables and types</h2>
+<p>C++ wants to know the <strong>type</strong> of every variable when you create it.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Holds</th>
+<th>Example from the code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code></td>
+<td>whole numbers</td>
+<td><code>int total = 0;</code></td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td><code>true</code> or <code>false</code></td>
+<td><code>bool placed = takeTurn(current);</code></td>
+</tr>
+<tr>
+<td><code>char</code></td>
+<td>one character, in single quotes</td>
+<td><code>char end = 'R';</code></td>
+</tr>
+<tr>
+<td><code>std::string</code></td>
+<td>text, in double quotes</td>
+<td><code>std::string answer = "5-6";</code></td>
+</tr>
+</tbody>
+</table></div>
+<pre class="highlight"><code class="language-cpp">static const int HAND_SIZE = 7;     // round.h. const = can never change</code></pre>
+<p><code>const</code> means "this value can't change after it's set". Names in <code>ALL_CAPS</code> are constants by convention.</p>
+<h2 id="3-functions">3. Functions</h2>
+<p>A function has a <strong>return type</strong>, a <strong>name</strong>, <strong>parameters</strong> in <code>( )</code>, and a body in <code>{ }</code>:</p>
+<pre class="highlight"><code class="language-cpp">// tile.cpp
+bool Tile::isValidPips(int pips) {
+    return pips &gt;= MIN_PIPS &amp;&amp; pips &lt;= MAX_PIPS;
+}</code></pre>
+<p>This reads as: "a function named <code>isValidPips</code> that takes an <code>int</code> called <code>pips</code> and returns a <code>bool</code>." <code>void</code> as a return type means the function returns nothing.</p>
+<p>(The <code>Tile::</code> part means "this function belongs to the <code>Tile</code> class". See section 7.)</p>
+<h2 id="4-decisions-if-else-and-operators">4. Decisions: <code>if</code>, <code>else</code>, and operators</h2>
+<pre class="highlight"><code class="language-cpp">// tile.cpp: Tile::setPips
+if (!isValidPips(leftPips) || !isValidPips(rightPips)) {
+    return false;
+}
+m_leftPips = leftPips;
+m_rightPips = rightPips;
+return true;</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>==</code> <code>!=</code></td>
+<td>equal / not equal (<strong>two</strong> <code>=</code> for comparing; one <code>=</code> assigns)</td>
+</tr>
+<tr>
+<td><code>&lt;</code> <code>&lt;=</code> <code>&gt;</code> <code>&gt;=</code></td>
+<td>comparisons</td>
+</tr>
+<tr>
+<td><code>&amp;&amp;</code></td>
+<td>and</td>
+</tr>
+<tr>
+<td><code>\|\|</code></td>
+<td>or</td>
+</tr>
+<tr>
+<td><code>!</code></td>
+<td>not</td>
+</tr>
+<tr>
+<td><code>%</code></td>
+<td>remainder: <code>15 % 5</code> is 0, <code>11 % 5</code> is 1</td>
+</tr>
+</tbody>
+</table></div>
+<p>There's also a one-line "if": <code>condition ? valueIfTrue : valueIfFalse</code>. It's used for scoring in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a>:</p>
+<pre class="highlight"><code class="language-cpp">int points = (sum % m_targetScore == 0) ? sum : 0;   // score the sum if it divides evenly</code></pre>
+<p><strong>Predict A:</strong> with <code>sum = 11</code> and <code>m_targetScore = 5</code>, what is <code>points</code>?</p>
+<h2 id="5-loops">5. Loops</h2>
+<p><strong>Counting loop</strong> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/boneyard.cpp" data-code="src/boneyard.cpp" data-line="" class="code-link">boneyard.cpp</a>, building all 28 tiles):</p>
+<pre class="highlight"><code class="language-cpp">for (int left = 0; left &lt;= 6; left++) {          // start; keep going while true; step
+    for (int right = left; right &lt;= 6; right++) {
+        m_tiles.push_back(Tile(left, right));    // add tile left-right to the list
+    }
+}</code></pre>
+<p><strong>"For each" loop</strong> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp" data-code="src/hand.cpp" data-line="" class="code-link">hand.cpp</a>). Read it as "for each tile in m_tiles":</p>
+<pre class="highlight"><code class="language-cpp">int total = 0;
+for (const Tile&amp; tile : m_tiles) {
+    total += tile.getSum();          // same as: total = total + tile.getSum();
+}</code></pre>
+<p><strong><code>while</code> loop, with <code>continue</code> and <code>return</code></strong> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp" data-code="src/human.cpp" data-line="" class="code-link">human.cpp</a>, simplified):</p>
+<pre class="highlight"><code class="language-cpp">while (true) {                                   // loop forever...
+    std::string answer = View::readWord("Enter the tile to play: ");
+    if (!Tile::fromString(answer, tile)) {
+        View::message("That is not a tile.");
+        continue;                                // ...skip to the next time round
+    }
+    // ... more checks ...
+    return Move(tile, end);                      // ...until we return a good answer
+}</code></pre>
+<p><code>continue</code> jumps back to the top of the loop. <code>break</code> leaves the loop. <code>return</code> leaves the whole function.</p>
+<p><strong>Predict B:</strong> how many tiles does the nested <code>for</code> loop above create? (Hint: when <code>left</code> is 0, <code>right</code> goes 0..6, so 7 tiles. When <code>left</code> is 1…)</p>
+<h2 id="6-lists-and-text-stdvector-and-stdstring">6. Lists and text: <code>std::vector</code> and <code>std::string</code></h2>
+<p><code>std::vector&lt;Tile&gt;</code> means "a list of <code>Tile</code>s that can grow and shrink". The type inside <code>&lt; &gt;</code> is what the list holds.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>m_tiles.push_back(t)</code></td>
+<td>add <code>t</code> to the end</td>
+</tr>
+<tr>
+<td><code>m_tiles.size()</code></td>
+<td>how many items</td>
+</tr>
+<tr>
+<td><code>m_tiles.empty()</code></td>
+<td><code>true</code> if there are none</td>
+</tr>
+<tr>
+<td><code>m_tiles[i]</code></td>
+<td>item at position <code>i</code>. <strong>Positions start at 0</strong></td>
+</tr>
+<tr>
+<td><code>m_tiles.front()</code></td>
+<td>first item (the list must not be empty!)</td>
+</tr>
+<tr>
+<td><code>m_tiles.erase(m_tiles.begin() + i)</code></td>
+<td>remove the item at position <code>i</code></td>
+</tr>
+</tbody>
+</table></div>
+<pre class="highlight"><code class="language-cpp">// boneyard.cpp: take the first tile off the pile
+bool Boneyard::drawTile(Tile&amp; drawnTile) {
+    if (isEmpty()) {
+        return false;                   // nothing to draw
+    }
+    drawnTile = m_tiles.front();        // copy the first tile out
+    m_tiles.erase(m_tiles.begin());     // remove it from the pile
+    return true;
+}</code></pre>
+<p>Strings work much the same: <code>text.length()</code>, <code>text[1]</code> (one <code>char</code>), and <code>+</code> to join: <code>"Human" + std::string(" passes.")</code>. <code>std::to_string(5)</code> turns a number into text.</p>
+<h2 id="7-classes-and-objects">7. Classes and objects</h2>
+<p>A <strong>class</strong> bundles data together with the functions that work on that data. A <strong>Tile</strong> has two numbers and some functions. Here's <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.h" data-code="src/tile.h" data-line="" class="code-link">tile.h</a>, shortened:</p>
+<pre class="highlight"><code class="language-cpp">class Tile {
+public:                                  // anyone may use these
+    Tile(int leftPips = 0, int rightPips = 0);   // constructor: runs when a Tile is created
+    int getLeftPips() const;             // "selector" (getter)
+    int getSum() const;
+    bool isDouble() const;
+    bool setPips(int leftPips, int rightPips);   // "mutator" (setter)
+
+private:                                 // only Tile's own functions may touch these
+    int m_leftPips;                      // m_ = "member": data stored inside each Tile
+    int m_rightPips;
+};</code></pre>
+<ul>
+<li>The <strong>class</strong> is the blueprint. An <strong>object</strong> is one actual thing built from it: <code>Tile t(2, 5);</code> creates a tile 2-5.</li>
+<li>Call a function on an object with a dot: <code>t.getSum()</code> gives 7, and <code>t.isDouble()</code> gives false.</li>
+<li><strong><code>private</code></strong> data can only be changed through the class's own functions. That's how <code>Tile</code> guarantees its pips are always 0–6: the only way in is <code>setPips</code>, which checks.</li>
+<li>The <strong>header (<code>.h</code>)</strong> lists what the class has. The <strong><code>.cpp</code></strong> file writes each function out, with the <code>ClassName::</code> prefix:</li>
+</ul>
+<pre class="highlight"><code class="language-cpp">// tile.cpp
+Tile::Tile(int leftPips, int rightPips) : m_leftPips(0), m_rightPips(0) {
+    setPips(leftPips, rightPips);
+}</code></pre>
+<p>The part after <code>:</code> is an <strong>initializer list</strong>. It sets the member variables before the body runs.</p>
+<p><strong>Predict C:</strong> <code>Tile t(4, 9);</code> Pips must be 0–6, so what does <code>t.toString()</code> return? (Read <code>Tile::Tile</code> and <code>setPips</code> above.)</p>
+<p><strong>You now know enough for Day 1.</strong> Part 2 is for Day 2.</p>
+<hr />
+<h1 id="part-2-the-c-features-this-project-relies-on">Part 2: the C++ features this project relies on</h1>
+<h2 id="8-const-functions-and-static-functions">8. <code>const</code> functions and <code>static</code> functions</h2>
+<pre class="highlight"><code class="language-cpp">int getSum() const;                                      // const: promises not to change the object
+static bool fromString(const std::string&amp; text, Tile&amp; result);   // static: belongs to the class</code></pre>
+<ul>
+<li>A <strong><code>const</code> function</strong> only reads. The compiler stops it from changing any <code>m_</code> variable.</li>
+<li>A <strong><code>static</code> function</strong> doesn't need an object. You call it on the class name: <code>Tile::fromString("5-6", tile)</code>. It's like a plain function kept inside the class for tidiness.</li>
+</ul>
+<h2 id="9-references--another-name-for-the-same-variable">9. References (<code>&amp;</code>): "another name for the same variable"</h2>
+<p>Normally, passing a variable to a function <strong>copies</strong> it. A reference (<code>Type&amp;</code>) passes the variable <em>itself</em>, so the function can change it:</p>
+<pre class="highlight"><code class="language-cpp">Tile drawn;                          // round.cpp
+if (m_boneyard.drawTile(drawn)) {    // drawTile(Tile&amp; drawnTile) fills in 'drawn'
+    player-&gt;addTile(drawn);
+}</code></pre>
+<p>This project uses references in two ways:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Example</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Type&amp;</code>: an <strong>output</strong> parameter</td>
+<td><code>bool drawTile(Tile&amp; drawnTile)</code></td>
+<td>return true/false <strong>and</strong> hand back a tile</td>
+</tr>
+<tr>
+<td><code>const Type&amp;</code>: a <strong>read-only</strong> parameter</td>
+<td><code>bool canPlay(const Layout&amp; layout) const</code></td>
+<td>avoid copying a big object, and promise not to change it</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="10-pointers--and--">10. Pointers (<code>*</code>) and <code>-&gt;</code></h2>
+<p>A <strong>pointer</strong> holds the <em>address</em> of an object: where it lives in memory. The <code>Round</code> doesn't own the players. It just needs to point at them:</p>
+<pre class="highlight"><code class="language-cpp">// tournament.cpp: &amp;m_human means "the address of m_human"
+Round round(&amp;m_human, &amp;m_computer, target);
+
+// round.h
+Player* m_players[2];             // an array of 2 pointers-to-Player
+
+// round.cpp: use -&gt; (not .) to call a function through a pointer
+Player* current = m_players[m_next];
+current-&gt;getName();</code></pre>
+<p>Rule of thumb: an <strong>object</strong> uses <code>.</code>, a <strong>pointer</strong> uses <code>-&gt;</code>.</p>
+<h2 id="11-inheritance-and-virtual-one-call-two-behaviours">11. Inheritance and <code>virtual</code>: one call, two behaviours</h2>
+<p><code>Human</code> and <code>Computer</code> both <strong>inherit from</strong> <code>Player</code>. They get its name, hand and scores for free, and each supplies its own way of choosing a move.</p>
+<pre class="highlight"><code class="language-cpp">// player.h
+class Player {
+public:
+    virtual Move chooseMove(const Layout&amp; layout, int targetScore) = 0;   // "= 0": no version here
+protected:                  // like private, but subclasses may use it too
+    Hand m_hand;
+};
+
+// human.h
+class Human : public Player {           // "a Human is a Player"
+public:
+    Move chooseMove(const Layout&amp; layout, int targetScore) override;   // asks the keyboard
+};
+
+// computer.h
+class Computer : public Player {
+public:
+    Move chooseMove(const Layout&amp; layout, int targetScore) override;   // uses the strategy
+};</code></pre>
+<p>Now the key line in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a>:</p>
+<pre class="highlight"><code class="language-cpp">Move move = player-&gt;chooseMove(m_layout, m_targetScore);</code></pre>
+<p><code>player</code> is a <code>Player*</code>. Because <code>chooseMove</code> is <strong><code>virtual</code></strong>, C++ checks <em>at run time</em> what the object really is, and runs <code>Human::chooseMove</code> or <code>Computer::chooseMove</code>. This is called <strong>polymorphism</strong>. It lets <code>Round</code> treat both players identically.</p>
+<h2 id="12-struct-enum-namespace-stdmap">12. <code>struct</code>, <code>enum</code>, <code>namespace</code>, <code>std::map</code></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Example</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>struct</code></td>
+<td><code>struct Move { Tile tile; char end; bool valid; };</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/move.h" data-code="src/move.h" data-line="" class="code-link">move.h</a>)</td>
+<td>A class whose members are public by default. Used for simple records</td>
+</tr>
+<tr>
+<td><code>enum</code></td>
+<td><code>enum Outcome { FINISHED, SAVE_REQUESTED };</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.h" data-code="src/round.h" data-line="" class="code-link">round.h</a>)</td>
+<td>A fixed set of named values</td>
+</tr>
+<tr>
+<td><code>namespace</code></td>
+<td><code>namespace View { void message(...); }</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.h" data-code="src/view.h" data-line="" class="code-link">view.h</a>)</td>
+<td>A named group of plain functions. Call as <code>View::message("hi")</code></td>
+</tr>
+<tr>
+<td><code>std::map</code></td>
+<td><code>std::map&lt;std::string, PlayerState&gt; players;</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/gamestate.h" data-code="src/gamestate.h" data-line="" class="code-link">gamestate.h</a>)</td>
+<td>A lookup table: <code>players["Human"]</code> gives the Human's saved data</td>
+</tr>
+<tr>
+<td><code>#ifndef X / #define X / #endif</code></td>
+<td>top and bottom of every <code>.h</code></td>
+<td>An "include guard": stops a header from being pasted in twice</td>
+</tr>
+<tr>
+<td><code>std::</code></td>
+<td><code>std::string</code>, <code>std::vector</code></td>
+<td>Things from the C++ <strong>standard library</strong>, which comes with the compiler</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="13-reading-compiler-errors">13. Reading compiler errors</h2>
+<p>When <code>make</code> fails, read the <strong>first</strong> error. Later ones are often knock-on effects. The format is <code>file:line:column: error: message</code>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>You see</th>
+<th>Usually means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>expected ';'</code></td>
+<td>missing semicolon at the end of the line above</td>
+</tr>
+<tr>
+<td><code>use of undeclared identifier 'x'</code> / <code>'x' was not declared</code></td>
+<td>typo, or a missing <code>#include</code></td>
+</tr>
+<tr>
+<td><code>no member named 'foo' in 'Hand'</code></td>
+<td>the function doesn't exist, or is spelled differently. Check the <code>.h</code> file</td>
+</tr>
+<tr>
+<td><code>undefined reference to ...</code> / <code>Undefined symbols</code></td>
+<td>declared in a <code>.h</code> but never written in a <code>.cpp</code>, or only one file was compiled</td>
+</tr>
+<tr>
+<td><code>cannot assign to ... const</code> / <code>discards qualifiers</code></td>
+<td>trying to change something inside a <code>const</code> function or through a <code>const&amp;</code></td>
+</tr>
+<tr>
+<td>warning <code>unused variable</code></td>
+<td>not an error, but clean it up. This project builds with <strong>zero</strong> warnings</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="answers">Answers</h2>
+<ul>
+<li><strong>A:</strong> <code>11 % 5</code> is 1, not 0, so <code>points = 0</code>.</li>
+<li><strong>B:</strong> 7 + 6 + 5 + 4 + 3 + 2 + 1 = <strong>28</strong>, the full double-six set.</li>
+<li><strong>C:</strong> <code>"0-0"</code>. The constructor starts at 0-0, and <code>setPips(4, 9)</code> refuses because 9 is out of range, so nothing changes.</li>
+</ul>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

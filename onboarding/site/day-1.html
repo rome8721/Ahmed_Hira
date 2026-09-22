@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 1: The story and the map · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="day-1">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" class="cur" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="day-1-the-story-and-the-map">Day 1: The story and the map</h1><div class="box start-box">
+<h4>Start of day</h4>
+<p>Open VS Code, open the terminal with <code>Ctrl+`</code>, and get the latest version of the course:</p>
+<pre><code>cd ~/Ahmed_Hira
+git pull</code></pre>
+<p class="muted">Links marked ↗ open the file in VS Code at the right line. The first time, your browser asks permission to open VS Code: allow it.
+Checkboxes and your answers are saved in this browser.</p>
+</div>
+<p><strong>Goal:</strong> By the end of today you have the project running on your Windows machine, you can say in two minutes what the program does, and you can name every class and its job.</p>
+<p><strong>Time:</strong> about 5½ hours.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Block</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setup: Git, compiler, VS Code</td>
+<td>60 min</td>
+</tr>
+<tr>
+<td>The story: read ONBOARDING, play the game</td>
+<td>60 min</td>
+</tr>
+<tr>
+<td>C++ primer, Part 1</td>
+<td>75 min</td>
+</tr>
+<tr>
+<td>The map: architecture, class guide, header tour</td>
+<td>75 min</td>
+</tr>
+<tr>
+<td>Exercises and check questions</td>
+<td>60 min</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="what-to-read">What to read</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Order</th>
+<th>File</th>
+<th>Why</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="onboarding.html#4-build-run-and-debug-locally">ONBOARDING.md §4.1–4.3</a></td>
+<td>Install the tools and build the program</td>
+<td>60 min (doing)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="onboarding.html">Onboarding: 35 Domino (C++)</a> §1 (what the app does) and §2 (glossary). Skim the C++ words table; the primer explains them properly</td>
+<td>The story and the vocabulary</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="cpp-primer.html">C++ primer: just enough to read this codebase</a> <strong>Part 1</strong> (sections 1–7)</td>
+<td>How the programming ideas you know are written in C++</td>
+<td>75 min</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="diagram-architecture.html">Architecture</a>, diagram 1 only</td>
+<td>The map</td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="../../doc/class-guides/00_All-Classes.pdf">doc/class-guides/00_All-Classes.pdf</a>, page 1 (the box diagram at the top, then Tile and Hand)</td>
+<td>The author's summary of each class</td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Only the comment at the top</strong> of each header in <a href="https://github.com/rome8721/Ahmed_Hira/tree/main/src">src/</a> (the first 2–4 lines): <code>tile.h</code>, <code>move.h</code>, <code>hand.h</code>, <code>boneyard.h</code>, <code>layout.h</code>, <code>player.h</code>, <code>human.h</code>, <code>computer.h</code>, <code>round.h</code>, <code>tournament.h</code>, <code>gamestate.h</code>, <code>serializer.h</code>, <code>view.h</code></td>
+<td>Each says in plain English what the class is for</td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.h" data-code="src/tile.h" data-line="" class="code-link">src/tile.h</a> and <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.cpp" data-code="src/tile.cpp" data-line="" class="code-link">src/tile.cpp</a>, in full</td>
+<td>The smallest class, fully explained by the primer. Your first complete read of real code</td>
+<td>15 min</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="diagram--simulator-for-today">Diagram / simulator for today</h2>
+<ul>
+<li><a href="diagram-architecture.html">Architecture</a>, diagram 1.</li>
+<li>Don't open the simulator yet. That's Day 2.</li>
+</ul>
+<hr />
+<h2 id="hands-on-exercises">Hands-on exercises</h2>
+<h3 id="1-set-up-build-and-run-60-min"><label class="ex-done"><input type="checkbox" class="task" data-i="0"> 1. Set up, build and run (60 min)</label></h3>
+<p>Follow <a href="onboarding.html#41-one-time-setup-on-windows-about-45-minutes">ONBOARDING.md §4.1</a> step by step. Ask your mentor if anything fails. Setup problems are normal, and they aren't the point of the day.</p>
+<p>Then build and run, one line at a time:</p>
+<pre class="highlight"><code class="language-sh">cd ~/Ahmed_Hira
+make
+./program</code></pre>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" class="task" data-i="1"> The build prints one <code>g++ ...</code> line and <strong>no warnings</strong>.</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="2"> VS Code's terminal prompt shows <strong>MINGW64</strong> (Git Bash), not <code>PS C:\</code> (PowerShell).</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="3"> <code>start onboarding/site/index.html</code> opens the course home page in your browser. From now on, you can follow each day there.</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="4"> <code>start onboarding/simulator.html</code> opens the simulator (just check it opens; you'll use it on Day 2).</li>
+</ul>
+<h3 id="2-play-the-game-30-min"><label class="ex-done"><input type="checkbox" class="task" data-i="5"> 2. Play the game (30 min)</label></h3>
+<ul class="task-list">
+<li class="task-list-item"><input type="checkbox" class="task" data-i="6"> Start a <strong>new game</strong>: tournament score <code>7</code>, target <code>5</code>. Play until the round ends. Use <code>help</code> at least twice.</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="7"> Start again and <strong>resume</strong> the file <code>test</code>. Watch the computer play <code>5-6</code>.</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="8"> Play one turn, answer <code>y</code> to "Save the game and quit?", save to <code>day1.txt</code>, and open that file in VS Code.</li>
+<li class="task-list-item"><input type="checkbox" class="task" data-i="9"> Resume <code>day1.txt</code>. You're exactly where you stopped.</li>
+</ul>
+<h3 id="3-who-prints-what-20-min"><label class="ex-done"><input type="checkbox" class="task" data-i="10"> 3. Who prints what? (20 min)</label></h3>
+<p>Pick five different <em>prompts</em> the program showed you (for example "Enter the target score for this round (3 or 5):"). Find each one in the code:</p>
+<pre class="highlight"><code class="language-sh">grep -n "target score for this round" src/*.cpp</code></pre>
+<p>(<code>grep</code> searches files for text. <code>-n</code> shows line numbers.) Write down: prompt → file → function.</p>
+<h3 id="4-prove-the-only-view-does-io-rule-10-min"><label class="ex-done"><input type="checkbox" class="task" data-i="11"> 4. Prove the "only View does I/O" rule (10 min)</label></h3>
+<pre class="highlight"><code class="language-sh">grep -n "cout\|cin\|getline" src/*.cpp
+grep -n "fstream" src/*.cpp</code></pre>
+<p>Which files show up? Is that what <code>architecture.md</code> claims?</p>
+<h3 id="5-read-tile-like-a-pro-20-min"><label class="ex-done"><input type="checkbox" class="task" data-i="12"> 5. Read Tile like a pro (20 min)</label></h3>
+<p>With <a href="cpp-primer.html">C++ primer: just enough to read this codebase</a> Part 1 open, go through <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.cpp" data-code="src/tile.cpp" data-line="" class="code-link">src/tile.cpp</a> function by function. For each one, write one sentence in your own words saying what it does. Then answer:</p>
+<ul>
+<li>What does <code>Tile(3, 8)</code> become, and why?</li>
+<li>Why does <code>operator==</code> say <code>2-5</code> equals <code>5-2</code>?</li>
+</ul>
+<h3 id="6-draw-the-map-from-memory-15-min"><label class="ex-done"><input type="checkbox" class="task" data-i="13"> 6. Draw the map from memory (15 min)</label></h3>
+<p>Close everything. On paper, draw boxes for the classes and arrows for "uses". Group them into Control / Players / Model / Persistence / I/O. Then compare with <a href="diagram-architecture.html">Architecture</a> and fix your drawing in a different colour.</p>
+<hr />
+<h2 id="check-questions">Check questions</h2>
+<ol>
+<li>In one or two sentences, what does this program do for a player?<textarea class="answer" data-q="0" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>Which class is the only one allowed to print text or read the keyboard? Which is the only one that reads or writes files?<textarea class="answer" data-q="1" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>What is the boneyard, and which end of it do players draw from?<textarea class="answer" data-q="2" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>The file named <code>test</code> in the repo root: what is it, and how do you use it?<textarea class="answer" data-q="3" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>In C++, what is the difference between <code>tile.h</code> and <code>tile.cpp</code>? Why do you need to run <code>make</code> after changing either one?<textarea class="answer" data-q="4" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+</ol>
+<hr />
+<hr />
+<details class="answer-key"><summary>Show the answer key <span>(answer the questions first!)</span></summary>
+<p><strong>Exercise 5:</strong> <code>Tile(3, 8)</code> becomes <strong>0-0</strong>. The constructor starts at 0-0 and calls <code>setPips(3, 8)</code>, which refuses because 8 is outside 0–6, so nothing changes. <code>operator==</code> checks both "same way round" (<code>sameWay</code>) and "flipped" (<code>flippedWay</code>), and returns true if either matches, because a physical domino is the same piece whichever way you hold it.</p>
+<p><strong>Check questions</strong></p>
+<ol>
+<li>It's a terminal dominoes game ("35 Domino") where one human plays the computer. Players place matching tiles and score when the open ends add up to a multiple of 3 or 5, over several rounds until someone reaches the tournament score. Games can be saved to a text file and resumed.</li>
+<li><strong><code>View</code></strong> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.cpp" data-code="src/view.cpp" data-line="" class="code-link">src/view.cpp</a>) does all printing and reading. <strong><code>Serializer</code></strong> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/serializer.cpp" data-code="src/serializer.cpp" data-line="" class="code-link">src/serializer.cpp</a>) is the only code that opens files. Your <code>grep</code> in exercise 4 should confirm this.</li>
+<li>The face-down pile of tiles not yet dealt (<code>Boneyard</code>). Draws come off the <strong>front</strong>, the left-most tile in the save file (<code>Boneyard::drawTile</code>). Tiles returned after the first-player draw go on the <strong>bottom</strong>, at the end (<code>addToBottom</code>).</li>
+<li>Despite the name, it's a <strong>save file</strong>, not a test. Start <code>./program</code>, answer <code>y</code> to "Resume a saved game?", and type <code>test</code> as the file name.</li>
+<li><code>tile.h</code> (the header) <em>declares</em> what a <code>Tile</code> has: its functions and data. <code>tile.cpp</code> <em>defines</em> how each function works. The computer only runs the compiled file <code>program</code>, so changes to either file do nothing until <code>make</code> recompiles.</li>
+</ol></details><div class="pager"><a href="index.html">← Course home</a><button class="done-btn" id="doneBtn" type="button">Mark this day complete</button><a href="day-2.html">Day 2 →</a></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 5: Break and fix · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="day-5">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" class="cur" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="day-5-break-and-fix">Day 5: Break and fix</h1><div class="box start-box">
+<h4>Start of day</h4>
+<p>Open VS Code, open the terminal with <code>Ctrl+`</code>, and get the latest version of the course:</p>
+<pre><code>cd ~/Ahmed_Hira
+git pull</code></pre>
+<p class="muted">Links marked ↗ open the file in VS Code at the right line. The first time, your browser asks permission to open VS Code: allow it.
+Checkboxes and your answers are saved in this browser.</p>
+</div>
+<p><strong>Goal:</strong> Find and fix three realistic bugs using only the symptoms, the diagrams and the debugger. Practise the loop you'll use every day as a developer: <strong>reproduce → locate → understand → fix → verify</strong>.</p>
+<p><strong>Time:</strong> about 5 hours (about 1 hour per bug, plus setup and review).</p>
+<hr />
+<h2 id="setup-20-min">Setup (20 min)</h2>
+<p>Your mentor will give you a branch called <code>day5-bugs</code> with three bugs planted in it. You don't know where they are. That's the point.</p>
+<pre class="highlight"><code class="language-sh">git switch day5-bugs
+make clean &amp;&amp; make</code></pre>
+<blockquote>
+<p>Fetch the branch first if you don't have it: <code>git fetch origin &amp;&amp; git switch day5-bugs</code>. The tickets below describe symptoms only.</p>
+</blockquote>
+<p><strong>Rules for today</strong></p>
+<ol>
+<li>Use the hints under each ticket only after 45 minutes stuck on a bug, and open them one at a time. Your mentor has the full solutions.</li>
+<li>For every bug, write down: <strong>how you reproduced it</strong>, <strong>the file:line of the cause</strong>, <strong>why it was wrong</strong>, and <strong>how you verified the fix</strong>.</li>
+<li>Fix the cause, not the symptom. For example, don't "fix" a crash by wrapping <code>main()</code> in a try/catch.</li>
+</ol>
+<h2 id="what-to-read--use">What to read / use</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="diagram-request-flow.html">Request flow: one human turn</a>, <a href="diagram-save-game.html">Secondary workflow: save and quit (the &quot;database write&quot;)</a>, <a href="diagram-resume-game.html">Secondary workflow: resume a saved game (the &quot;database read&quot;)</a>, <a href="diagram-new-round.html">Secondary workflow: starting a new game and a new round</a></td>
+<td>Narrowing down <em>which layer</em> a symptom comes from</td>
+</tr>
+<tr>
+<td><a href="../simulator.html">simulator.html</a></td>
+<td>The correct data at each step, to compare against the debugger</td>
+</tr>
+<tr>
+<td><a href="../saves/">onboarding/saves/</a></td>
+<td>Reproducing exact situations</td>
+</tr>
+<tr>
+<td>Your Day 4 "one tile's journey" table</td>
+<td>Bug 1</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="bug-ticket-1-my-points-disappear-when-i-save"><label class="ex-done"><input type="checkbox" class="task" data-i="0"> Bug ticket #1: "My points disappear when I save"</label></h2>
+<blockquote>
+<p><strong>Reported by:</strong> a player
+<strong>Steps:</strong> Resume <code>onboarding/saves/happy-path.txt</code>. Play <code>5-6</code> on <code>R</code>. The game says "5 points!". Save to <code>bug1.txt</code> and quit.
+<strong>Expected:</strong> in <code>bug1.txt</code>, the Human's <code>Current Score</code> is 5 and the Computer's is 10.
+<strong>Actual:</strong> both players' <code>Current Score</code> lines say 0. After resuming, the points are gone.
+<strong>Category:</strong> wrong mapping</p>
+</blockquote>
+<p><strong>Hints (read one at a time, only if stuck)</strong></p>
+<details><summary>Hint 1</summary>The score is right on screen, so the model is fine. The bug is somewhere between the model and the file. Which functions sit in that gap? (See save-game.md.)</details>
+<details><summary>Hint 2</summary>Open the saved file. What value would produce <em>exactly</em> 0 for both players in this scenario? Which other field in the file is 0 for both?</details>
+<details><summary>Hint 3</summary>Put a breakpoint in <code>Round::toState</code> and look at each <code>ps</code> field just before <code>state.players[...] = ps;</code>.</details>
+
+<hr />
+<h2 id="bug-ticket-2-the-game-crashes-when-i-cant-play-late-in-a-round"><label class="ex-done"><input type="checkbox" class="task" data-i="1"> Bug ticket #2: "The game crashes when I can't play late in a round"</label></h2>
+<blockquote>
+<p><strong>Reported by:</strong> a player
+<strong>Steps:</strong> Resume <code>onboarding/saves/empty-boneyard.txt</code>. It's the Human's turn and none of the Human's tiles fit.
+<strong>Expected:</strong> "Human cannot play and the boneyard is empty. Human passes." Then the Computer plays.
+<strong>Actual:</strong> the program suddenly quits with no goodbye message. Depending on the terminal you may see <code>Segmentation fault</code>, or nothing at all. <code>echo $?</code> straight afterwards prints a non-zero number. Run with the debugger (F5), gdb stops at the crash with <code>SIGSEGV, Segmentation fault</code>.
+<strong>Category:</strong> missing null / empty check</p>
+</blockquote>
+<p><strong>Jargon:</strong> a <strong>segmentation fault</strong> ("segfault") means the program touched memory it doesn't own. In C++, a common cause is using something that doesn't exist: dereferencing a null pointer, or reading <code>front()</code> of an empty <code>std::vector</code>. C++ doesn't check for you. The code has to.</p>
+<p><strong>Hints</strong></p>
+<details><summary>Hint 1</summary>Run it under the debugger (F5). When it crashes, the <strong>Call Stack</strong> panel shows where. Click the frames from the top down until you reach code in <code>src/</code>.</details>
+<details><summary>Hint 2</summary>Look at the diagram in round-end.md: which call is supposed to <em>return false</em> when there's nothing left?</details>
+<details><summary>Hint 3</summary>Compare that function with its neighbour <code>peekFront()</code>. What does <code>peekFront</code> check that the crashing function doesn't?</details>
+
+<p><strong>Side lesson:</strong> if you run it with piped input (<code>printf 'y\n...' | ./program</code>), you might see <em>less</em> output before the crash than when you type interactively. When output goes to a pipe, it's buffered and never flushed when the program crashes. Don't trust "the last line printed" as the crash location. Trust the debugger.</p>
+<hr />
+<h2 id="bug-ticket-3-i-cant-choose-target-5-any-more"><label class="ex-done"><input type="checkbox" class="task" data-i="2"> Bug ticket #3: "I can't choose target 5 any more"</label></h2>
+<blockquote>
+<p><strong>Reported by:</strong> a tester
+<strong>Steps:</strong> Start a new game (<code>n</code>), tournament score <code>7</code>, then type <code>5</code> for the target.
+<strong>Expected:</strong> the round starts with target 5.
+<strong>Actual:</strong> <code>Please enter a whole number from 3 to 4.</code> Only 3 is ever accepted. Oddly, <strong>resuming</strong> <code>happy-path.txt</code> (target 5) still works.
+<strong>Category:</strong> bad config value</p>
+</blockquote>
+<p><strong>Hints</strong></p>
+<details><summary>Hint 1</summary>Search for the text "whole number from". Where do the numbers 3 and 4 in that message come from?</details>
+<details><summary>Hint 2</summary>Follow the arguments back from <code>View::readInt</code> to its caller in <code>Tournament::run</code>. They're named constants. Where are they defined?</details>
+<details><summary>Hint 3</summary>Why does resume still work? Look at where <code>Round::restore</code> gets <code>m_targetScore</code> from.</details>
+
+<hr />
+<h2 id="after-all-three-review-30-min"><label class="ex-done"><input type="checkbox" class="task" data-i="3"> After all three: review (30 min)</label></h2>
+<ol>
+<li>Run all three reproductions again on your fixed branch and confirm they pass.</li>
+<li>Run the happy path and the draw path once more to confirm nothing else broke (regression check).</li>
+<li><code>git diff main</code> should show exactly three small changes. Compare with your mentor.
+    Tip: after editing a header such as <code>round.h</code>, <code>make</code> rebuilds automatically, because the Makefile watches <code>.h</code> files too. If a fix ever seems to have no effect, run <code>make clean &amp;&amp; make</code> to be sure.</li>
+<li>Write 3–5 sentences: which bug was hardest to <em>locate</em>, and which tool helped most?</li>
+</ol>
+<hr />
+<h2 id="check-questions">Check questions</h2>
+<ol>
+<li>For bug #1, why did the on-screen score look correct even though the saved file was wrong? Which layer boundary was broken?<textarea class="answer" data-q="0" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>For bug #2, why might a crash like this <em>not</em> always happen, even though the code is wrong? (Undefined behaviour.)<textarea class="answer" data-q="1" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>For bug #3, why did resuming a target-5 game keep working?<textarea class="answer" data-q="2" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>What's the difference between the <em>symptom</em>, the <em>location</em> and the <em>root cause</em> of a bug? Answer using bug #2.<textarea class="answer" data-q="3" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>Name one way the codebase could have caught each bug earlier.<textarea class="answer" data-q="4" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+</ol>
+<hr />
+<hr />
+<details class="answer-key"><summary>Show the answer key <span>(answer the questions first!)</span></summary>
+<ol>
+<li>The model (<code>Player::m_roundScore</code>) was correct, and <code>View</code> reads the model, so the screen was right. The bug was in the <strong>model → record</strong> conversion (<code>Round::toState</code>), which only runs when saving. Data crossing a boundary (entity → DTO) is a classic place for mapping bugs.</li>
+<li>Calling <code>front()</code> or <code>erase(begin())</code> on an empty <code>std::vector</code> is <strong>undefined behaviour</strong>: C++ promises nothing. It may crash, return garbage, or appear to work, depending on memory layout, compiler and optimisation level. Here it reliably segfaults, but you can't rely on that. That's why the explicit <code>isEmpty()</code> guard matters.</li>
+<li><code>Round::restore</code> copies <code>m_targetScore</code> straight from the save file (<code>state.targetScore</code>) and never compares it against <code>MIN_TARGET</code>/<code>MAX_TARGET</code>. Only the <em>new round</em> path in <code>Tournament::run</code> uses those constants.</li>
+<li><strong>Symptom:</strong> segfault when a player can't play and the boneyard is empty. <strong>Location:</strong> <code>Boneyard::drawTile</code>, which reads <code>m_tiles.front()</code> without checking. <strong>Root cause:</strong> a missing precondition check. <code>Round::takeTurn</code> relies on <code>drawTile</code> returning <code>false</code> when empty to detect a pass, and that contract was broken.</li>
+<li>Examples: (1) an automated save → load round-trip test that compares scores; (2) a unit test calling <code>drawTile</code> on an empty <code>Boneyard</code>, or building with <code>-fsanitize=address</code>, or with <code>_LIBCPP_ENABLE_ASSERTIONS</code>/<code>-D_GLIBCXX_ASSERTIONS</code> so bad container access fails loudly; (3) a <code>static_assert(MAX_TARGET == 5)</code>, a test of the target prompt, or having the prompt text use the constants so the mismatch is visible.</li>
+</ol></details><div class="pager"><a href="day-4.html">← Day 4</a><button class="done-btn" id="doneBtn" type="button">Mark this day complete</button><a href="day-6.html">Day 6 →</a></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

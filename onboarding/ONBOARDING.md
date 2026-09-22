@@ -10,11 +10,13 @@ Welcome! This folder teaches you this codebase in 6 days. By the end you should 
 
 | Item | What it is |
 |---|---|
+| [`site/index.html`](site/index.html) | **The whole course as web pages. Start here each day.** Open it with `start onboarding/site/index.html`. It has a home page with your progress, one page per day, checklists and answer boxes that are remembered, and code links that open in VS Code |
 | `ONBOARDING.md` (this file) | The overview: what the app does, vocabulary, where things live, how to build/run/debug |
 | [`cpp-primer.md`](cpp-primer.md) | How basic programming ideas are written in C++, using examples from this code. Part 1 on Day 1, Part 2 on Day 2 |
 | [`diagrams/`](diagrams/) | Mermaid diagrams. They render on GitHub, and in VS Code with a Mermaid preview extension |
 | [`simulator.html`](simulator.html) | Open it in any browser. Step through one turn, class by class, with sample data |
 | [`days/`](days/) | The 6-day plan. Do one file per day |
+| [`tools/build_site.py`](tools/build_site.py) | For the mentor: rebuilds `site/` after any `.md` file changes (`python3 onboarding/tools/build_site.py`) |
 | [`saves/`](saves/) | Save files that start the program at an exact moment in a game (used by the simulator scenarios and the debugger exercises) |
 
 ---
@@ -256,6 +258,8 @@ File names are relative to the folder you started the program from.
 ```sh
 printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program
 ```
+
+**Open the course pages** (the easiest way to follow the six days): `start onboarding/site/index.html`, or double-click `site\index.html` in the `onboarding` folder.
 
 **Open the simulator:** in File Explorer go to your `Ahmed_Hira\onboarding` folder and double-click `simulator.html`, or run `start onboarding/simulator.html` in Git Bash.
 

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body data-page="diagram-architecture">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<p class="muted"><a href="index.html#diagrams">← All diagrams</a></p><h1 id="architecture">Architecture</h1>
+<p><strong>Short version:</strong> one repository → one C++17 program → one executable (<code>program</code>). There are no sub-projects, no shared libraries beyond the C++ standard library, no network calls, and no database. The program touches the outside world in only two ways: <strong>the terminal</strong> (keyboard in, text out) and <strong>text save files</strong> on disk.</p>
+<h2 id="1-big-picture-layers-deployable-and-the-outside-world">1. Big picture: layers, deployable, and the outside world</h2>
+<p>Arrows mean "calls / uses".</p>
+<div class="mermaid">flowchart TB
+    subgraph OUTSIDE["Outside the program"]
+        USER(["Player at the terminal&lt;br/&gt;(stdin / stdout)"])
+        FILE[("Save file on disk&lt;br/&gt;plain text, e.g. ./test")]
+    end
+
+    subgraph BUILD["Build and tooling (not shipped)"]
+        MK["Makefile&lt;br/&gt;make / make run / make clean"]
+        VSC[".vscode/tasks.json + launch.json&lt;br/&gt;build task, gdb debug on Windows"]
+        CXX["g++, C++17&lt;br/&gt;MinGW on Windows, clang on macOS"]
+        MK --&gt; CXX
+        VSC --&gt; CXX
+    end
+
+    CXX --&gt;|"compiles src/*.cpp"| EXE
+
+    subgraph EXE["Deployable: program.exe on Windows, program on Mac/Linux"]
+        MAIN["main()&lt;br/&gt;src/main.cpp"]
+
+        subgraph CONTROL["Control layer"]
+            TOUR["Tournament&lt;br/&gt;session loop, resume/save"]
+            ROUND["Round&lt;br/&gt;turn loop, draw/pass, scoring"]
+        end
+
+        subgraph PLAYERS["Players layer"]
+            PLAYER["Player (abstract base)"]
+            HUMAN["Human&lt;br/&gt;reads moves"]
+            COMP["Computer&lt;br/&gt;strategy: recommend()"]
+        end
+
+        subgraph MODEL["Model layer (no I/O here)"]
+            LAYOUT["Layout&lt;br/&gt;table + placement rules"]
+            BONE["Boneyard&lt;br/&gt;draw pile"]
+            HAND["Hand"]
+            MOVE["Move (struct)"]
+            TILE["Tile"]
+        end
+
+        subgraph PERSIST["Persistence"]
+            SER["Serializer&lt;br/&gt;all static"]
+            GS["GameState / PlayerState&lt;br/&gt;plain records"]
+        end
+
+        VIEW["View (namespace)&lt;br/&gt;every print and every read"]
+
+        MAIN --&gt; TOUR
+        TOUR --&gt; ROUND
+        TOUR --&gt; SER
+        ROUND --&gt; PLAYER
+        PLAYER -.-&gt;|"subclass"| HUMAN
+        PLAYER -.-&gt;|"subclass"| COMP
+        HUMAN --&gt;|"help mode"| COMP
+        ROUND --&gt; LAYOUT
+        ROUND --&gt; BONE
+        ROUND &lt;--&gt;|"toState / restore"| GS
+        SER &lt;--&gt; GS
+        PLAYER --&gt; HAND
+        HAND --&gt; TILE
+        BONE --&gt; TILE
+        LAYOUT --&gt; TILE
+        LAYOUT --&gt; MOVE
+        TOUR --&gt; VIEW
+        ROUND --&gt; VIEW
+        HUMAN --&gt; VIEW
+        COMP --&gt; VIEW
+    end
+
+    VIEW &lt;--&gt;|"std::cout / std::getline(std::cin)"| USER
+    SER &lt;--&gt;|"std::ofstream / std::ifstream"| FILE</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/architecture.md">diagrams/architecture.md</a>.</p>
+<p><strong>What to notice</strong></p>
+<ul>
+<li><strong>Only <code>View</code> talks to the terminal.</strong> <code>Tile</code>, <code>Hand</code>, <code>Boneyard</code>, <code>Layout</code> and <code>Move</code> never print or read. That's the author's main design rule.</li>
+<li><strong>Only <code>Serializer</code> opens files.</strong> <code>Tournament</code> is the only class that calls <code>Serializer</code>.</li>
+<li><strong><code>Round</code> never knows which player is which.</strong> It holds two <code>Player*</code> pointers and calls <code>chooseMove()</code>. <code>Tournament</code> is the only class that knows a <code>Human</code> and a <code>Computer</code> exist.</li>
+<li><strong><code>GameState</code> sits between <code>Round</code> and <code>Serializer</code></strong>, so neither needs to know about the other.</li>
+</ul>
+<h2 id="2-who-owns-whom-class-diagram">2. Who owns whom (class diagram)</h2>
+<p>Filled diamond (<code>*--</code>) = "owns / contains". Open diamond (<code>o--</code>) = "points to but doesn't own". Triangle (<code>&lt;|--</code>) = "inherits from".</p>
+<div class="mermaid">classDiagram
+    class Tournament {
+        -Human m_human
+        -Computer m_computer
+        -int m_tournamentScore
+        +run()
+        -askResume(GameState&amp;) bool
+        -saveAndQuit(const Round&amp;)
+    }
+    class Round {
+        -Player* m_players
+        -int m_next
+        -int m_targetScore
+        -Layout m_layout
+        -Boneyard m_boneyard
+        -int m_consecutivePasses
+        +startNew()
+        +restore(const GameState&amp;) bool
+        +play() Outcome
+        +toState(int, GameState&amp;)
+        -takeTurn(Player*) bool
+        -finish()
+    }
+    class Player {
+        &lt;&lt;abstract&gt;&gt;
+        #string m_name
+        #Hand m_hand
+        #int m_roundScore
+        #int m_tournamentScore
+        +canPlay(const Layout&amp;) bool
+        +chooseMove(const Layout&amp;, int)* Move
+    }
+    class Human {
+        +chooseMove(const Layout&amp;, int) Move
+        -askEnd(const Layout&amp;, const Tile&amp;) char
+    }
+    class Computer {
+        +chooseMove(const Layout&amp;, int) Move
+        +recommend(Hand, Layout, int, string&amp;)$ Move
+    }
+    class Layout {
+        -vector~Tile~ m_line
+        -vector~Tile~ m_up
+        -vector~Tile~ m_down
+        -int m_spinnerIndex
+        +canPlace(Tile, char) bool
+        +place(Tile, char) bool
+        +getOpenEndSum() int
+        +toString() string
+        +fromString(string) bool
+    }
+    class Boneyard {
+        -vector~Tile~ m_tiles
+        +reset()
+        +shuffle()
+        +drawTile(Tile&amp;) bool
+        +addToBottom(Tile) bool
+    }
+    class Hand {
+        -vector~Tile~ m_tiles
+        +addTile(Tile) bool
+        +removeTile(Tile) bool
+        +contains(Tile) bool
+        +getSum() int
+    }
+    class Tile {
+        -int m_leftPips
+        -int m_rightPips
+        +isDouble() bool
+        +flipped() Tile
+        +fromString(string, Tile&amp;)$ bool
+    }
+    class Move {
+        &lt;&lt;struct&gt;&gt;
+        +Tile tile
+        +char end
+        +bool valid
+    }
+
+    Tournament *-- Human
+    Tournament *-- Computer
+    Tournament ..&gt; Round : creates one per round
+    Round o-- Player : 2 pointers
+    Round *-- Layout
+    Round *-- Boneyard
+    Player &lt;|-- Human
+    Player &lt;|-- Computer
+    Player *-- Hand
+    Hand *-- Tile
+    Boneyard *-- Tile
+    Layout *-- Tile
+    Move *-- Tile
+    Human ..&gt; Computer : help calls recommend()</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/architecture.md">diagrams/architecture.md</a>.</p>
+<h2 id="3-header-dependencies-who-includes-whom">3. Header dependencies (who <code>#include</code>s whom)</h2>
+<p>Useful when you add a file or get a compile error about a missing type.</p>
+<div class="mermaid">flowchart LR
+    main_cpp["main.cpp"] --&gt; tournament_h["tournament.h"]
+    tournament_h --&gt; human_h["human.h"] &amp; computer_h["computer.h"] &amp; gamestate_h["gamestate.h"]
+    tournament_cpp["tournament.cpp"] --&gt; round_h["round.h"] &amp; serializer_h["serializer.h"] &amp; view_h["view.h"]
+    round_h --&gt; player_h["player.h"] &amp; layout_h["layout.h"] &amp; boneyard_h["boneyard.h"] &amp; gamestate_h
+    human_h --&gt; player_h
+    computer_h --&gt; player_h
+    human_cpp["human.cpp"] --&gt; computer_h &amp; view_h
+    computer_cpp["computer.cpp"] --&gt; view_h
+    player_h --&gt; hand_h["hand.h"] &amp; layout_h &amp; move_h["move.h"]
+    serializer_h --&gt; gamestate_h
+    gamestate_h --&gt; hand_h
+    view_h --&gt; hand_h &amp; layout_h
+    layout_h --&gt; tile_h["tile.h"] &amp; move_h
+    move_h --&gt; tile_h
+    hand_h --&gt; tile_h
+    boneyard_h --&gt; tile_h</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/architecture.md">diagrams/architecture.md</a>.</p>
+<h2 id="4-external-services-and-libraries">4. External services and libraries</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>What's used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Third-party libraries</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Standard library</td>
+<td><code>&lt;iostream&gt;</code>, <code>&lt;fstream&gt;</code>, <code>&lt;sstream&gt;</code>, <code>&lt;string&gt;</code>, <code>&lt;vector&gt;</code>, <code>&lt;map&gt;</code>, <code>&lt;algorithm&gt;</code>, <code>&lt;random&gt;</code>, <code>&lt;cctype&gt;</code></td>
+</tr>
+<tr>
+<td>Network / APIs / DB</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Randomness</td>
+<td><code>std::random_device</code> seeds <code>std::mt19937</code> in <code>Boneyard::shuffle()</code>, so every new game is different. A resumed game has no randomness until the next round starts</td>
+</tr>
+<tr>
+<td>Files</td>
+<td>Save files, at whatever path the user types, relative to the working directory</td>
+</tr>
+</tbody>
+</table></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

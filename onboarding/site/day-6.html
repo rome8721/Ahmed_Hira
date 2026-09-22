@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 6: Build and explain · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="day-6">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" class="cur" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="day-6-build-and-explain">Day 6: Build and explain</h1><div class="box start-box">
+<h4>Start of day</h4>
+<p>Open VS Code, open the terminal with <code>Ctrl+`</code>, and get the latest version of the course:</p>
+<pre><code>cd ~/Ahmed_Hira
+git pull</code></pre>
+<p class="muted">Links marked ↗ open the file in VS Code at the right line. The first time, your browser asks permission to open VS Code: allow it.
+Checkboxes and your answers are saved in this browser.</p>
+</div>
+<p><strong>Goal:</strong> Build a small feature on your own that runs through every layer of the resume flow (file → record → model → control → screen). Then explain the whole program flow back to your mentor on a whiteboard, without notes.</p>
+<p><strong>Time:</strong> about 5½ hours: ~3½ h feature, ~1 h preparing the explanation, ~45 min whiteboard session.</p>
+<blockquote>
+<p><strong>Important constraint:</strong> the save-file format is <strong>fixed by the course</strong>. Your feature must not add, remove, rename or reorder any line in the save file. It only changes how strictly the program <em>checks</em> a file when resuming.</p>
+</blockquote>
+<hr />
+<h2 id="what-to-read-30-min-refresh-only">What to read (30 min, refresh only)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Your Day 4 notes: the "break the save file" table (cases <strong>h</strong> and <strong>i</strong> were accepted but shouldn't be) and the tile-journey table</td>
+<td>This feature fixes exactly those two gaps</td>
+</tr>
+<tr>
+<td><a href="diagram-resume-game.html">Secondary workflow: resume a saved game (the &quot;database read&quot;)</a></td>
+<td>The flow you're changing</td>
+</tr>
+<tr>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">src/round.cpp</a> <code>Round::restore()</code></td>
+<td>Where most of your change goes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tournament.cpp" data-code="src/tournament.cpp" data-line="" class="code-link">src/tournament.cpp</a> <code>Tournament::run()</code>, the <code>round.restore(saved)</code> call</td>
+<td>Where the player is told what went wrong</td>
+</tr>
+<tr>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.h" data-code="src/layout.h" data-line="" class="code-link">src/layout.h</a> selectors (<code>getLine</code>, <code>getUpArm</code>, <code>getDownArm</code>)</td>
+<td>Where tiles on the table can be read</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="diagram--simulator-for-today">Diagram / simulator for today</h2>
+<ul>
+<li><a href="diagram-resume-game.html">Secondary workflow: resume a saved game (the &quot;database read&quot;)</a>: mark every box your change touches.</li>
+<li><a href="diagram-data-model.html#4-rules-the-data-must-follow-invariants">diagrams/data-model.md §4</a>: the two ❌ rows are the ones you'll turn into ✅.</li>
+</ul>
+<hr />
+<h2 id="the-feature-tell-me-why-my-save-file-is-invalid">The feature: "Tell me why my save file is invalid"</h2>
+<p><strong>User story:</strong> <em>As a player, when a save file can't be resumed, I want the program to tell me exactly what's wrong with it. And it should never resume a game that breaks the rules.</em></p>
+<p>Today, a broken file gives only "That save file does not describe a valid game. Starting fresh." Worse, some broken files are accepted: <code>Target Score: 4</code>, or the same tile in a hand and the boneyard.</p>
+<h3 id="acceptance-criteria">Acceptance criteria</h3>
+<p>Every item must be true before you're done:</p>
+<ol>
+<li><input type="checkbox" class="task" data-i="0"> <strong>Target rule:</strong> a file whose <code>Target Score</code> isn't 3 or 5 is rejected.</li>
+<li><input type="checkbox" class="task" data-i="1"> <strong>Full-set rule:</strong> every one of the 28 tiles (<code>0-0</code> … <code>6-6</code>) must appear <strong>exactly once</strong> across both hands, the layout (main line and both arms) and the boneyard. A duplicated tile or a missing tile makes the file rejected.</li>
+<li><input type="checkbox" class="task" data-i="2"> <strong>Clear reason:</strong> whenever <code>Round::restore</code> rejects a file (for these new rules <em>and</em> for every existing rejection), the player sees one line of the form:
+    <code>That save file does not describe a valid game (&lt;reason&gt;). Starting fresh.</code>
+    with a specific reason, for example:<ul>
+<li><code>the target score must be 3 or 5</code></li>
+<li><code>tile 0-5 appears more than once</code></li>
+<li><code>tile 1-4 is missing</code></li>
+<li><code>the layout tiles do not connect</code></li>
+<li><code>there is no section for Human</code></li>
+</ul>
+</li>
+<li><input type="checkbox" class="task" data-i="3"> <strong>Good files still work:</strong> <code>test</code>, <code>onboarding/saves/happy-path.txt</code>, <code>draw-path.txt</code> and <code>empty-boneyard.txt</code> all still resume, and a game saved by the program resumes.</li>
+<li><input type="checkbox" class="task" data-i="4"> <strong>Save format unchanged:</strong> a game saved after your change has exactly the same lines, in the same order, as before.</li>
+<li><input type="checkbox" class="task" data-i="5"> <strong>Layers respected:</strong> model classes (<code>Layout</code>, <code>Boneyard</code>, <code>Hand</code>, <code>Tile</code>) print nothing. The reason is <em>built</em> in <code>Round</code> and <em>printed</em> through <code>View</code> by <code>Tournament</code>.</li>
+<li><input type="checkbox" class="task" data-i="6"> <strong>Quality:</strong> <code>make clean &amp;&amp; make</code> gives <strong>no warnings</strong>, and new code follows the existing style (pseudocode comment above each new function, <code>m_</code> members, selectors marked <code>const</code>).</li>
+</ol>
+<h3 id="suggested-plan-think-before-you-type">Suggested plan (think before you type)</h3>
+<p>Before coding, write down <strong>which file and function</strong> you'll change for each layer, and how. Your mentor should check this list before you start (15 min).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Question to answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Persistence (<code>Serializer</code>, <code>GameState</code>)</td>
+<td>Does anything here need to change, given the format is fixed? What does <code>load</code> already check, and what does it leave to <code>restore</code>?</td>
+</tr>
+<tr>
+<td>Model (<code>Layout</code>)</td>
+<td>How can <code>Round</code> get <em>every</em> tile on the table, including both arms? Is there already a selector, or should you add a small one?</td>
+</tr>
+<tr>
+<td>Model (<code>Boneyard</code>, <code>Hand</code>, <code>Tile</code>)</td>
+<td>How can you get the list of all 28 tiles without typing them out? (Hint: something in <code>Boneyard</code> already builds it.) How do you compare two tiles when <code>5-6</code> and <code>6-5</code> are the same tile?</td>
+</tr>
+<tr>
+<td>Control (<code>Round::restore</code>)</td>
+<td>How will <code>restore</code> hand a reason back to its caller? (A common C++ pattern: an extra <code>std::string&amp;</code> output parameter, like <code>drawTile(Tile&amp;)</code>.) In what order should the checks run?</td>
+</tr>
+<tr>
+<td>Control (<code>Tournament::run</code>)</td>
+<td>What changes at the call site?</td>
+</tr>
+<tr>
+<td>View</td>
+<td>Which existing function prints the message?</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="test-it">Test it</h3>
+<p>Make the test files first (in the repo root). Each changes one line of <code>test</code>:</p>
+<pre class="highlight"><code class="language-sh">sed 's/^Target Score: 5/Target Score: 4/'   test &gt; bad-target.txt
+sed 's/Hand: 1-6 1-5/Hand: 0-5 1-5/'        test &gt; bad-duplicate.txt   # 0-5 is also in the boneyard
+sed 's/^Boneyard:  1-4 /Boneyard:  /'       test &gt; bad-missing.txt     # 1-4 disappears
+sed 's/^Layout:.*/Layout:   L 0-4 5-6 R/'   test &gt; bad-layout.txt
+sed 's/^Human:/Humans:/'                    test &gt; bad-name.txt</code></pre>
+<p>Then check each one, and that good files still load:</p>
+<pre class="highlight"><code class="language-sh">make clean &amp;&amp; make
+for f in bad-target.txt bad-duplicate.txt bad-missing.txt bad-layout.txt bad-name.txt \
+         test onboarding/saves/happy-path.txt onboarding/saves/draw-path.txt onboarding/saves/empty-boneyard.txt; do
+  echo "== $f"
+  printf 'y\n%s\nn\n7\n5\n' "$f" | ./program | grep -E "Resuming|valid game"
+done</code></pre>
+<p>Expected: each <code>bad-*</code> file prints its specific reason, and each good file prints "Resuming the saved round".</p>
+<p>Format check (criterion 5): resume <code>happy-path.txt</code>, play <code>5-6</code> <code>R</code>, save to <code>after.txt</code>, and compare its line labels with <code>test</code>. Only the tiles and numbers should differ.</p>
+<hr />
+<h2 id="prepare-and-give-the-whiteboard-explanation">Prepare and give the whiteboard explanation</h2>
+<h3 id="prepare-60-min"><label class="ex-done"><input type="checkbox" class="task" data-i="7"> Prepare (60 min)</label></h3>
+<p>Without looking at the diagrams, draw on paper:</p>
+<ol>
+<li>The <strong>architecture</strong>: all classes grouped by layer, with arrows.</li>
+<li><strong>One human turn</strong>, as a sequence: every <code>Class::method</code> from <code>Round::play</code> to the points message.</li>
+<li><strong>Save and resume</strong>: the path from the model to the file and back, and which checks happen in <code>load</code> vs <code>restore</code>.</li>
+<li><strong>Your feature</strong>: the resume diagram with your changes highlighted.</li>
+</ol>
+<p>Then compare with <a href="diagram-architecture.html">Architecture</a>, <a href="diagram-request-flow.html">Request flow: one human turn</a>, <a href="diagram-save-game.html">Secondary workflow: save and quit (the &quot;database write&quot;)</a> and <a href="diagram-resume-game.html">Secondary workflow: resume a saved game (the &quot;database read&quot;)</a>, and fix any gaps.</p>
+<h3 id="present-3045-min-with-your-mentor"><label class="ex-done"><input type="checkbox" class="task" data-i="8"> Present (30–45 min, with your mentor)</label></h3>
+<p>Explain on a whiteboard, in this order:</p>
+<ol>
+<li>What the program does, in two minutes, as if to a new player.</li>
+<li>The architecture and the two design rules (all I/O in <code>View</code>, all file access in <code>Serializer</code>).</li>
+<li>One human turn end to end, including one validation failure and the draw/pass path.</li>
+<li>How the computer decides, and why help mode gives the same answer.</li>
+<li>Save and resume, and the difference between a <em>format</em> check and a <em>game-rule</em> check.</li>
+<li>Your feature: walk through your diff layer by layer, and show the tests passing.</li>
+</ol>
+<p>Your mentor will ask "what happens if…?" questions. Answer them by pointing at the code path on your diagram.</p>
+<hr />
+<h2 id="check-questions">Check questions</h2>
+<ol>
+<li>List every file you changed for the feature, and say which layer each belongs to. Which layers did you <em>not</em> need to change, and why?<textarea class="answer" data-q="0" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>Why do the new checks belong in <code>Round::restore</code> rather than in <code>Serializer::load</code>?<textarea class="answer" data-q="1" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>How did you get the reason text from <code>Round::restore</code> to the screen without making <code>Round</code> print anything?<textarea class="answer" data-q="2" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>Why is comparing tiles with <code>==</code> (and not by comparing <code>getLeftPips()</code> and <code>getRightPips()</code> directly) important for the full-set check?<textarea class="answer" data-q="3" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li><code>restore</code> builds a local <code>Layout</code> and <code>Boneyard</code>, and only copies them into the round at the very end. Why does that matter now that there are more ways for it to fail?<textarea class="answer" data-q="4" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+</ol>
+<hr />
+<hr />
+<details class="answer-key"><summary>Show the answer key <span>(answer the questions first!)</span></summary>
+<p>These are reference answers. Other correct designs exist; judge by the acceptance criteria. Your mentor has a reference implementation to compare with.</p>
+<ol>
+<li>Typically: <code>layout.h</code>/<code>layout.cpp</code> (model: a small <code>getAllTiles()</code> selector, optional, because <code>getLine</code>/<code>getUpArm</code>/<code>getDownArm</code> also work), <code>round.h</code>/<code>round.cpp</code> (control: <code>restore(const GameState&amp;, std::string&amp; reason)</code> with the new checks and a reason on every <code>return false</code>), <code>tournament.cpp</code> (control: pass a <code>reason</code> string and include it in the message). <strong>Not changed:</strong> <code>serializer.cpp</code> and <code>gamestate.h</code>, because the format is fixed and the record already carries everything needed. <code>view.cpp</code>, because <code>View::message</code> already prints any line.</li>
+<li><code>Serializer</code> only knows the <em>format</em> (lines, numbers, tile text). "3 or 5" and "28 tiles exactly once" are <em>game rules</em>, and <code>Round</code> owns the rules and the constants (<code>MIN_TARGET</code>, <code>MAX_TARGET</code>). Keeping it this way means the same checks would protect any other source of a <code>GameState</code>, not just files.</li>
+<li>An output parameter: <code>restore</code> fills a <code>std::string&amp; reason</code>, the same pattern as <code>Boneyard::drawTile(Tile&amp;)</code>. <code>Tournament::run</code> (a control class that already talks to <code>View</code>) builds the sentence and calls <code>View::message</code>. The model and <code>Round::restore</code> stay free of I/O.</li>
+<li>Tiles in hands and the boneyard are stored as dealt (like <code>5-6</code>), while tiles on the table are <em>flipped</em> to fit (like <code>6-5</code>). <code>Tile::operator==</code> treats both orientations as the same domino. Comparing the pips directly would report <code>5-6</code> as missing and <code>6-5</code> as an unknown extra.</li>
+<li>It's "validate, then commit": if any check fails, <code>restore</code> returns before touching the round's real <code>m_layout</code>, <code>m_boneyard</code> or the players' hands and scores. The failed attempt leaves no half-restored state, and the "Starting fresh" path begins from a clean round.</li>
+</ol></details><div class="pager"><a href="day-5.html">← Day 5</a><button class="done-btn" id="doneBtn" type="button">Mark this day complete</button><a href="index.html">Course home →</a></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

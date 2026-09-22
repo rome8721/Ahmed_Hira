@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 3: Trace it live · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="day-3">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" class="cur" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="day-3-trace-it-live">Day 3: Trace it live</h1><div class="box start-box">
+<h4>Start of day</h4>
+<p>Open VS Code, open the terminal with <code>Ctrl+`</code>, and get the latest version of the course:</p>
+<pre><code>cd ~/Ahmed_Hira
+git pull</code></pre>
+<p class="muted">Links marked ↗ open the file in VS Code at the right line. The first time, your browser asks permission to open VS Code: allow it.
+Checkboxes and your answers are saved in this browser.</p>
+</div>
+<p><strong>Goal:</strong> Watch the real program run the main flow in the debugger. Stop at every layer from the sequence diagram, inspect the data, and step through all three simulator scenarios plus the "pass" path.</p>
+<p><strong>Time:</strong> about 5 hours.</p>
+<hr />
+<h2 id="what-to-read">What to read</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Why</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="onboarding.html#44-debug-in-vs-code-step-by-step">ONBOARDING.md §4.4</a></td>
+<td>Debugger controls refresher</td>
+<td>10 min</td>
+</tr>
+<tr>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/.vscode/launch.json" data-code=".vscode/launch.json" data-line="" class="code-link">.vscode/launch.json</a> (the <em>Windows, gdb</em> configuration) and the <strong>build (make)</strong> task in <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/.vscode/tasks.json" data-code=".vscode/tasks.json" data-line="" class="code-link">.vscode/tasks.json</a></td>
+<td>What F5 actually does: run <code>make</code> (which compiles with <code>-g</code>), then start <code>program.exe</code> under the <code>gdb</code> debugger in a separate console window</td>
+<td>15 min</td>
+</tr>
+<tr>
+<td><a href="diagram-request-flow.html">Request flow: one human turn</a></td>
+<td>Your map for placing breakpoints</td>
+<td>10 min</td>
+</tr>
+<tr>
+<td><a href="diagram-round-end.html">Secondary workflow: passing, ending a round, and ending the tournament</a></td>
+<td>For the pass/round-end exercise</td>
+<td>15 min</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="diagram--simulator-for-today">Diagram / simulator for today</h2>
+<p>Keep <a href="../simulator.html">simulator.html</a> open next to VS Code. For each scenario, advance the simulator one step each time the debugger stops, and check that the real values match.</p>
+<hr />
+<h2 id="setup-the-breakpoint-set-20-min">Setup: the breakpoint set (20 min)</h2>
+<p>Set these breakpoints (click left of the line number). Line numbers are approximate, so look for the code shown.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Layer</th>
+<th>File</th>
+<th>Put the breakpoint on</th>
+<th>Watch these</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tournament.cpp" data-code="src/tournament.cpp" data-line="" class="code-link">tournament.cpp</a></td>
+<td><code>if (round.play() == Round::SAVE_REQUESTED)</code> (≈53)</td>
+<td><code>m_tournamentScore</code></td>
+</tr>
+<tr>
+<td>B2</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a></td>
+<td><code>Player* current = m_players[m_next];</code> in <code>play()</code> (≈112)</td>
+<td><code>m_next</code>, <code>m_consecutivePasses</code></td>
+</tr>
+<tr>
+<td>B3</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a></td>
+<td><code>while (!player-&gt;canPlay(m_layout))</code> in <code>takeTurn()</code> (≈182)</td>
+<td><code>m_boneyard</code> (expand <code>m_tiles</code>)</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>Control → Players</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a></td>
+<td><code>Move move = player-&gt;chooseMove(...)</code> (≈193)</td>
+<td><code>player</code> (see its real type)</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>Players</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp" data-code="src/human.cpp" data-line="" class="code-link">human.cpp</a></td>
+<td><code>if (!Tile::fromString(answer, tile))</code> (≈35)</td>
+<td><code>answer</code></td>
+</tr>
+<tr>
+<td>B6</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp" data-code="src/hand.cpp" data-line="" class="code-link">hand.cpp</a></td>
+<td>first line inside <code>Hand::indexOf</code> (≈114)</td>
+<td><code>tile</code>, <code>m_tiles</code></td>
+</tr>
+<tr>
+<td>B7</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp" data-code="src/layout.cpp" data-line="" class="code-link">layout.cpp</a></td>
+<td><code>int pips = getEndPips(end);</code> in <code>canPlace</code> (≈119)</td>
+<td><code>tile</code>, <code>end</code>, <code>pips</code></td>
+</tr>
+<tr>
+<td>B8</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp" data-code="src/layout.cpp" data-line="" class="code-link">layout.cpp</a></td>
+<td><code>int pips = getEndPips(end);</code> in <code>place</code> (≈167)</td>
+<td><code>tile</code>, <code>m_line</code></td>
+</tr>
+<tr>
+<td>B9</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/boneyard.cpp" data-code="src/boneyard.cpp" data-line="" class="code-link">boneyard.cpp</a></td>
+<td><code>if (isEmpty())</code> in <code>drawTile</code> (≈100)</td>
+<td><code>m_tiles</code></td>
+</tr>
+<tr>
+<td>B10</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a></td>
+<td><code>int points = (sum % m_targetScore == 0) ? sum : 0;</code> (≈200)</td>
+<td><code>sum</code>, <code>m_targetScore</code></td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Where to find the "Watch these" values:</strong> names starting with <code>m_</code> belong to the object, so in the <strong>Variables</strong> panel they're inside <strong><code>this</code></strong> (click to expand). Parameters and local variables (<code>player</code>, <code>answer</code>, <code>tile</code>, <code>sum</code>) are listed directly. A local variable shows a random-looking value until the line that sets it has run: that's leftover memory, not a bug.</p>
+<p><strong>Tip:</strong> B6 and B7 are hit <em>many</em> times, because <code>canPlay</code> and <code>recommend</code> call them in loops. Right-click a breakpoint → <strong>Disable</strong> to silence it, or <strong>Edit Breakpoint</strong> → add a condition such as <code>end == 'R'</code>.</p>
+</blockquote>
+<hr />
+<h2 id="hands-on-exercises">Hands-on exercises</h2>
+<h3 id="1-happy-path-in-the-debugger-60-min"><label class="ex-done"><input type="checkbox" class="task" data-i="0"> 1. Happy path in the debugger (60 min)</label></h3>
+<p>Select <strong>Debug program (Windows, gdb)</strong>, press F5. A console window opens: type <code>y</code>, then <code>onboarding/saves/happy-path.txt</code> there.</p>
+<blockquote>
+<p>Remember: <strong>all typing goes into the separate console window</strong>, and all inspecting happens in VS Code. Arrange the two windows side by side.</p>
+</blockquote>
+<p>At each stop, write down the values in the <strong>Watch these</strong> column. Then:</p>
+<ul>
+<li>At <strong>B4</strong> press <strong>F11</strong> (Step Into). Which function do you land in? Look at the <strong>Call Stack</strong>.</li>
+<li>Continue to <strong>B5</strong>. Type <code>5-6</code> in the console window first (the program is waiting in <code>View::readLine</code>).</li>
+<li>At <strong>B8</strong>, press <strong>F10</strong> a few times and watch <code>tile</code> change from <code>5-6</code> to <code>6-5</code> when <code>flipped()</code> runs.</li>
+<li>At <strong>B10</strong>, what are <code>sum</code> and <code>points</code>?</li>
+<li>Answer <code>n</code> to "Save the game and quit?". Now the computer's turn starts. At <strong>B4</strong> press F11 again: this time you land in <code>Computer::chooseMove</code>. Same line, different function. That's polymorphism, live.</li>
+</ul>
+<h3 id="2-draw-path-40-min"><label class="ex-done"><input type="checkbox" class="task" data-i="1"> 2. Draw path (40 min)</label></h3>
+<p>Restart (<code>Ctrl+Shift+F5</code>) and resume <code>onboarding/saves/draw-path.txt</code>. Disable B6/B7.</p>
+<ul>
+<li>At <strong>B3</strong>, the human can't play. Step Over (F10) and watch the loop run twice.</li>
+<li>At <strong>B9</strong>, check <code>m_tiles</code> before and after the draw. Which tile comes out first? Does it match the simulator?</li>
+<li>Find where the drawn tile is added to the hand (<code>player-&gt;addTile(drawn)</code>).</li>
+</ul>
+<h3 id="3-validation-path-40-min"><label class="ex-done"><input type="checkbox" class="task" data-i="2"> 3. Validation path (40 min)</label></h3>
+<p>Resume <code>happy-path.txt</code> again and type the bad inputs from simulator scenario 3: <code>5_6</code>, <code>0-0</code>, <code>2-4</code> + <code>L</code>, <code>5-6</code> + <code>Q</code> + <code>r</code>.</p>
+<p>For each bad input, find the exact line that decides "no", and the <code>continue</code> that sends it back to the top of the loop. Use <strong>Step Over</strong>, not Continue.</p>
+<h3 id="4-the-pass-path-and-the-end-of-a-round-40-min"><label class="ex-done"><input type="checkbox" class="task" data-i="3"> 4. The pass path and the end of a round (40 min)</label></h3>
+<p>Resume <code>onboarding/saves/empty-boneyard.txt</code> (the human can't play and the boneyard is empty).</p>
+<ul>
+<li>At <strong>B9</strong>, <code>isEmpty()</code> is true. Step until you're back in <code>Round::play()</code>. What is <code>m_consecutivePasses</code>?</li>
+<li>Add a breakpoint at the start of <code>Round::finish()</code>. Continue playing (answer <code>n</code> to save prompts, play whatever you can, type <code>help</code> if stuck) until the round ends. At <code>finish()</code>, compute the bonus by hand from both hand sums before stepping over it.</li>
+</ul>
+<h3 id="5-call-stack-drill-15-min"><label class="ex-done"><input type="checkbox" class="task" data-i="4"> 5. Call Stack drill (15 min)</label></h3>
+<p>Stop anywhere inside <code>Layout::canPlace</code> during a <strong>human</strong> turn, and again during a <strong>computer</strong> turn. Copy both call stacks. Why are they different? (Hint: <code>Player::canPlay</code>, <code>Human::chooseMove</code>, <code>Computer::recommend</code>.)</p>
+<hr />
+<h2 id="check-questions">Check questions</h2>
+<ol>
+<li>You're paused at B4 and press F11. During the human's turn you land in <code>Human::chooseMove</code>, and during the computer's turn in <code>Computer::chooseMove</code>. Why does the same line lead to different functions?<textarea class="answer" data-q="0" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>The debugger seems "stuck" and no breakpoint is hit, and the terminal shows <code>Enter the tile to play ...</code>. What's going on?<textarea class="answer" data-q="1" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>The Makefile compiles with <code>-g</code> and without any <code>-O</code> optimisation flag. Why do both matter for debugging?<textarea class="answer" data-q="2" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>During the happy path, what's the value of <code>tile</code> just before and just after <code>tile = tile.flipped();</code> in <code>Layout::place</code>?<textarea class="answer" data-q="3" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>In the empty-boneyard scenario, trace the values of <code>m_consecutivePasses</code> and explain what would make the round end.<textarea class="answer" data-q="4" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+</ol>
+<hr />
+<hr />
+<details class="answer-key"><summary>Show the answer key <span>(answer the questions first!)</span></summary>
+<ol>
+<li><code>player</code> is a <code>Player*</code>, but <code>chooseMove</code> is <strong>virtual</strong>, so the call is dispatched at run time on the object's real type. <code>m_players[0]</code> points to <code>Tournament::m_human</code> and <code>m_players[1]</code> to <code>Tournament::m_computer</code>.</li>
+<li>The program is waiting for input in <code>View::readLine</code> → <code>std::getline(std::cin, …)</code>. Switch to the program's <strong>console window</strong> (it may be behind VS Code) and type your answer.</li>
+<li><code>-g</code> adds debug information (the map from machine code back to source lines and variable names). Without it, breakpoints don't bind and variables can't be shown. No optimisation (the default, same as <code>-O0</code>) keeps the machine code in the same order as your source. With optimisation (<code>-O2</code>), lines get reordered or merged and variables show as "optimized out", so stepping jumps around confusingly.</li>
+<li>Before: <code>m_leftPips = 5, m_rightPips = 6</code> (5-6). After: <code>m_leftPips = 6, m_rightPips = 5</code> (6-5).</li>
+<li>The human passes (<code>takeTurn</code> returns false), so <code>m_consecutivePasses</code> becomes <strong>1</strong>. If the computer then places a tile, it goes back to <strong>0</strong>. If the computer also can't play, it reaches <strong>2</strong> (<code>PLAYER_COUNT</code>) and the round ends with "Neither player can place a tile." In this file the computer holds 20 tiles and can play, so the count resets to 0. The round then continues until someone goes out, or both players are blocked.</li>
+</ol></details><div class="pager"><a href="day-2.html">← Day 2</a><button class="done-btn" id="doneBtn" type="button">Mark this day complete</button><a href="day-4.html">Day 4 →</a></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

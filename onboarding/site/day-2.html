@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 2: The main flow · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+
+</head>
+<body data-page="day-2">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" class="cur" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<h1 id="day-2-the-main-flow">Day 2: The main flow</h1><div class="box start-box">
+<h4>Start of day</h4>
+<p>Open VS Code, open the terminal with <code>Ctrl+`</code>, and get the latest version of the course:</p>
+<pre><code>cd ~/Ahmed_Hira
+git pull</code></pre>
+<p class="muted">Links marked ↗ open the file in VS Code at the right line. The first time, your browser asks permission to open VS Code: allow it.
+Checkboxes and your answers are saved in this browser.</p>
+</div>
+<p><strong>Goal:</strong> Explain, using real class and method names, everything that happens during one turn: from the player typing <code>5-6</code> to the points appearing on screen. Then read that code in order, layer by layer.</p>
+<p><strong>Time:</strong> about 5½–6 hours (simulator 75 min, C++ primer Part 2 60 min, code reading 2¼ h, exercises 80 min). The <code>Computer</code> material is optional if you run out of time.</p>
+<hr />
+<h2 id="what-to-use-first-the-simulator-75-min">What to use first: the simulator (75 min)</h2>
+<p>Open <a href="../simulator.html">simulator.html</a> in your browser (double-click it, no internet needed).</p>
+<ol>
+<li><strong>Scenario 1, Happy path.</strong> Step through it slowly with the → key. At every step, read the <strong>Call</strong> box and the <strong>Data</strong> box <em>before</em> the explanation, and try to predict what the data will be.</li>
+<li><strong>Scenario 2, Draw from boneyard.</strong> Notice where the flow is <em>different</em> from scenario 1, and where it's the <em>same</em>.</li>
+<li><strong>Scenario 3, Validation errors.</strong> For each red "rejected" step, note which class said no.</li>
+<li>Answer the "Check yourself" question at the end of each scenario before revealing the answer.</li>
+</ol>
+<p>Keep <a href="diagram-request-flow.html">Request flow: one human turn</a> open in another tab. It's the same flow as one sequence diagram.</p>
+<h2 id="before-the-code-c-primer-part-2-60-min">Before the code: C++ primer, Part 2 (60 min)</h2>
+<p>Read <a href="cpp-primer.html">C++ primer: just enough to read this codebase</a> <strong>sections 8–13</strong>. The code you read next uses references (<code>&amp;</code>), pointers (<code>-&gt;</code>) and <code>virtual</code> on almost every line. Section 11 (inheritance and <code>virtual</code>) is the most important one today.</p>
+<h2 id="what-to-read-in-this-exact-order">What to read (in this exact order)</h2>
+<p>Read the <strong>pseudocode comment</strong> above each function first, then the code. Line numbers may drift slightly.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Layer</th>
+<th>File and function(s)</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a> <code>Round::play()</code> (≈ line 110)</td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Control</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/round.cpp" data-code="src/round.cpp" data-line="" class="code-link">round.cpp</a> <code>Round::takeTurn()</code> (≈ line 181)</td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Players</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.cpp" data-code="src/player.cpp" data-line="" class="code-link">player.cpp</a> <code>Player::canPlay()</code>, and <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/player.h" data-code="src/player.h" data-line="" class="code-link">player.h</a> (<code>chooseMove</code> is <code>= 0</code>)</td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Players</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/human.cpp" data-code="src/human.cpp" data-line="" class="code-link">human.cpp</a> <code>Human::chooseMove()</code>, <code>Human::askEnd()</code></td>
+<td>20 min</td>
+</tr>
+<tr>
+<td>5</td>
+<td>I/O</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/view.cpp" data-code="src/view.cpp" data-line="" class="code-link">view.cpp</a> <code>View::readWord()</code>, <code>View::readLine()</code>, <code>View::message()</code></td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/tile.cpp" data-code="src/tile.cpp" data-line="" class="code-link">tile.cpp</a> <code>Tile::fromString()</code>, <code>setPips()</code>, <code>operator==</code>, <code>flipped()</code></td>
+<td>15 min</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/hand.cpp" data-code="src/hand.cpp" data-line="" class="code-link">hand.cpp</a> <code>contains()</code>, <code>indexOf()</code>, <code>removeTile()</code></td>
+<td>10 min</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Model</td>
+<td><a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.cpp" data-code="src/layout.cpp" data-line="" class="code-link">layout.cpp</a> <code>isOpenEnd()</code>, <code>getEndPips()</code>, <code>canPlace()</code>, <code>place()</code>, <code>getOpenEndSum()</code>, <code>endValue()</code></td>
+<td>40 min</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Players</td>
+<td><em>(Optional, or do it on Day 3)</em> <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/computer.cpp" data-code="src/computer.cpp" data-line="" class="code-link">computer.cpp</a> <code>Computer::chooseMove()</code>, <code>recommend()</code>, <code>pointsFor()</code>, <code>sumAfter()</code>, with <a href="diagram-computer-turn.html">Secondary workflow: the computer&#x27;s turn (and help mode)</a></td>
+<td>30 min</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>layout.cpp</code> is the hardest file in the project. Read the big comment at the top of <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/layout.h" data-code="src/layout.h" data-line="" class="code-link">layout.h</a> first: it explains how tiles are stored ("oriented so that touching pips match").</p>
+<hr />
+<h2 id="hands-on-exercises">Hands-on exercises</h2>
+<h3 id="1-write-the-turn-story-30-min"><label class="ex-done"><input type="checkbox" class="task" data-i="0"> 1. Write the turn story (30 min)</label></h3>
+<p>Without looking, write 10–15 numbered lines describing one human turn. Each line should name a real <code>Class::method</code>. Then check it against the table in <a href="diagram-request-flow.html#the-same-flow-as-a-numbered-checklist-with-fileline">Request flow: one human turn</a>.</p>
+<h3 id="2-compute-open-end-totals-by-hand-20-min"><label class="ex-done"><input type="checkbox" class="task" data-i="1"> 2. Compute open-end totals by hand (20 min)</label></h3>
+<p>Use <code>getOpenEndSum()</code> rules (a double at an end counts both pips, and an empty spinner arm counts the spinner's pip only when the spinner is <strong>not</strong> at the L or R end). Work out the total for each layout (save-file notation):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Layout</th>
+<th>Your answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td><code>L 5-3 R</code></td>
+<td></td>
+</tr>
+<tr>
+<td>b</td>
+<td><code>L 5-3 3-3 R</code></td>
+<td></td>
+</tr>
+<tr>
+<td>c</td>
+<td><code>L 5-3 [D 3-3 U] 3-2 R</code></td>
+<td></td>
+</tr>
+<tr>
+<td>d</td>
+<td><code>L 5-3 [D 3-3 U] 3-2 2-2 R</code></td>
+<td></td>
+</tr>
+<tr>
+<td>e</td>
+<td><code>L 0-4 [D 4-4 U] R</code></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>For each, would it score with target 5? With target 3?</p>
+<h3 id="3-predict-then-run-30-min"><label class="ex-done"><input type="checkbox" class="task" data-i="2"> 3. Predict, then run (30 min)</label></h3>
+<p>For each question, write your prediction <strong>first</strong>, then check it in the program (<code>./program</code>, resume <code>onboarding/saves/happy-path.txt</code>):</p>
+<ol>
+<li>You type <code>6-5</code> instead of <code>5-6</code>. Accepted? How is it stored on the table?</li>
+<li>You type <code>help</code>. Which tile does it suggest, and why? Which function produced that sentence?</li>
+<li>You type <code>5-6</code> and then <code>r</code> (lower-case). Accepted?</li>
+<li>You type <code>1-6</code> and choose <code>L</code>. What message appears, and which class decided?</li>
+</ol>
+<h3 id="4-optional-trace-the-computers-decision-20-min"><label class="ex-done"><input type="checkbox" class="task" data-i="3"> 4. <em>(Optional)</em> Trace the computer's decision (20 min)</label></h3>
+<p>Resume the repo's <code>test</code> file. The computer plays <code>5-6</code> at the Right "to earn a score of 5". Using <code>Computer::recommend()</code>, list every legal <code>(tile, end)</code> pair the computer considered, the open-end total each would produce, and explain why <code>5-6</code> won over <code>6-6</code>.</p>
+<hr />
+<h2 id="check-questions">Check questions</h2>
+<ol>
+<li>Name, in order, the three classes that can reject a human's input during <code>Human::chooseMove()</code>, and one example input each rejects.<textarea class="answer" data-q="0" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li><code>Round::takeTurn</code> calls <code>player-&gt;chooseMove(...)</code>. How does C++ decide whether to run <code>Human::chooseMove</code> or <code>Computer::chooseMove</code>? What keyword in <code>player.h</code> makes this possible?<textarea class="answer" data-q="1" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>The player types <code>5-6</code> and places it on the Right end, which shows 6. How is the tile stored in <code>m_line</code>, and which function flips it?<textarea class="answer" data-q="2" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li><code>Layout::place()</code> calls <code>canPlace()</code> again, even though <code>Human</code> already checked. Why is that a good idea?<textarea class="answer" data-q="3" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+<li>When does a placement score points, and how many?<textarea class="answer" data-q="4" rows="3" placeholder="Write your answer here before opening the answer key"></textarea></li>
+</ol>
+<hr />
+<hr />
+<details class="answer-key"><summary>Show the answer key <span>(answer the questions first!)</span></summary>
+<p><strong>Exercise 2:</strong> a = <strong>8</strong> (5 + 3). b = <strong>11</strong> (5 + 3-3 at the end counts 6). c = <strong>13</strong> (5 + 2 + empty up arm 3 + empty down arm 3). d = <strong>15</strong> (5 + 2-2 counts 4 + 3 + 3). e = <strong>8</strong> (0 + 4-4 counts 8. The spinner is at the R end, so its empty arms add nothing). With target 5: d scores 15. With target 3: d scores 15. All others score nothing with either target (8, 11, 13 aren't multiples of 3 or 5). All values were verified by running <code>Layout::fromString</code> + <code>getOpenEndSum</code>.</p>
+<p><strong>Exercise 3:</strong> (1) Accepted: <code>Tile::operator==</code> treats 6-5 and 5-6 as the same tile. It's stored as <code>6-5</code> either way. (2) <code>help</code> calls <code>Computer::recommend()</code>. The suggestion depends on the position: from <code>happy-path.txt</code> it suggests <code>5-6</code> at the Right "to earn a score of 5". (3) Yes: <code>askEnd</code> uses <code>toupper</code>. (4) "1-6 does not match the 0 at the Left end.", decided by <code>Layout::canPlace</code> (the message is printed by <code>View::message</code>).</p>
+<p><strong>Exercise 4:</strong> The legal pairs are <code>5-6</code> at R (total 0 + 5 = 5) and <code>6-6</code> at R (total 0 + 12 = 12, because a double at an end counts both pips). Nothing matches the L end (0). Only 5 is a multiple of 5, so <code>pointsFor</code> gives 5 vs 0, and <code>5-6</code> wins in step 1 of the strategy.</p>
+<p><strong>Check questions</strong></p>
+<ol>
+<li><code>Tile::fromString</code> rejects badly formed text (<code>5_6</code>, <code>abc</code>, <code>9-9</code>). <code>Hand::contains</code> rejects a tile you don't hold (<code>0-0</code>). <code>Layout::canPlace</code> rejects a tile that doesn't match the chosen end (<code>2-4</code> on an end showing 0). (<code>Human::askEnd</code> also rejects an end letter that isn't open, like <code>Q</code>.)</li>
+<li><strong>Dynamic dispatch</strong> (polymorphism): <code>chooseMove</code> is declared <code>virtual ... = 0</code> (pure virtual) in <code>Player</code>. At run time C++ looks at the real type of the object the <code>Player*</code> points to. <code>Human</code> and <code>Computer</code> mark their versions with <code>override</code>.</li>
+<li>As <code>6-5</code>. <code>Layout::place()</code>, in <code>case RIGHT</code>: if the tile's left pip doesn't equal the end's pips, it calls <code>tile.flipped()</code>. Stored tiles always satisfy <code>m_line[i].right == m_line[i+1].left</code>.</li>
+<li>It's defence in depth: the model protects its own rules, whoever calls it. <code>Computer</code>, future code, or a bug in <code>Human</code> can't put an illegal tile on the table. If it happens anyway, <code>Round::takeTurn</code> forfeits the turn instead of corrupting the layout.</li>
+<li>After a tile is placed, <code>Round::takeTurn</code> computes <code>m_layout.getOpenEndSum()</code>. If that total is a multiple of the round's target (3 or 5), the player scores <strong>the whole total</strong> (for example 15 points, not 1). Otherwise 0.</li>
+</ol></details><div class="pager"><a href="day-1.html">← Day 1</a><button class="done-btn" id="doneBtn" type="button">Mark this day complete</button><a href="day-3.html">Day 3 →</a></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>

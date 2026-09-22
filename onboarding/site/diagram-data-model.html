@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data model · 35 Domino course</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --panel-2: #f0f1f3; --text: #1d232e; --muted: #5c6575;
+  --border: #dde1e7; --accent: #2f6fdd; --accent-soft: #e4ecfb; --ok: #1e8a4c; --ok-soft: #e2f4e9;
+  --warn-soft: #fbf1dc; --code-bg: #f3f4f6; --shadow: 0 1px 2px rgba(20,30,50,.05), 0 2px 10px rgba(20,30,50,.05);
+  --mono: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+    --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+    --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --panel: #171b23; --panel-2: #1f2430; --text: #e5e8ee; --muted: #9aa3b3;
+  --border: #2c3341; --accent: #6d9ef0; --accent-soft: #1c2a44; --ok: #5fcf8c; --ok-soft: #173325;
+  --warn-soft: #33290f; --code-bg: #1c212b; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); }
+a { color: var(--accent); }
+a.code-link::after { content: " ↗"; font-size: .8em; }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 3px 9px; border-radius: 7px; }
+.nav a:hover { background: var(--panel-2); color: var(--text); }
+.nav a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a.done::after { content: " ✓"; color: var(--ok); }
+.theme-btn { margin-left: auto; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 7px; padding: 3px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+main h1 { font-size: 30px; line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.01em; }
+main h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+main h3 { font-size: 18px; margin: 26px 0 8px; }
+main hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+main hr + hr { display: none; }
+code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+.copy-btn { position: absolute; top: 6px; right: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 6px; font: 12px var(--sans); padding: 2px 8px; cursor: pointer; opacity: .8; }
+.copy-btn:hover { opacity: 1; color: var(--text); }
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--panel); }
+th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+th { background: var(--panel-2); }
+blockquote { margin: 16px 0; padding: 10px 16px; background: var(--warn-soft); border-left: 4px solid #d9a320; border-radius: 0 8px 8px 0; }
+blockquote p { margin: 6px 0; }
+details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details.answer-key { margin-top: 30px; border: 2px dashed var(--border); padding: 12px 16px; }
+details.answer-key summary { font-size: 18px; }
+details.answer-key summary span { font-weight: 400; color: var(--muted); font-size: 14px; }
+li.task-list-item { list-style: none; margin-left: -1.3em; }
+label.ex-done { cursor: pointer; }
+input.task { width: 17px; height: 17px; margin-right: 8px; vertical-align: -3px; accent-color: var(--ok); cursor: pointer; }
+textarea.answer { display: block; width: 100%; margin: 6px 0 12px; font: 14px/1.5 var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin: 18px 0; box-shadow: var(--shadow); }
+.box h4 { margin: 0 0 6px; font-size: 15px; }
+.box p { margin: 6px 0; }
+.start-box { border-left: 4px solid var(--accent); }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.done-btn { font: inherit; font-weight: 600; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+.done-btn.is-done { background: var(--ok); color: #fff; }
+.progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+.progress > div { height: 100%; background: var(--ok); width: 0; transition: width .3s; }
+.muted { color: var(--muted); font-size: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin: 14px 0; }
+.card { display: block; text-decoration: none; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+.card:hover { border-color: var(--accent); }
+.card h3 { margin: 0 0 4px; font-size: 17px; }
+.card .badge { font-size: 12px; font-weight: 700; color: var(--ok); }
+.card p { margin: 6px 0; font-size: 14px; color: var(--muted); }
+.mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 14px 0; overflow-x: auto; }
+.mermaid.no-js { white-space: pre; font-family: var(--mono); font-size: 12.5px; }
+.offline-note { display: none; }
+.mermaid.no-js + .offline-note, .show-offline .offline-note { display: block; }
+@media (max-width: 600px) { main h1 { font-size: 25px; } body { font-size: 15.5px; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body data-page="diagram-data-model">
+<header class="topbar"><div class="topbar-inner">
+<a class="brand" href="index.html">35 Domino course</a>
+<nav class="nav"><a href="index.html">Home</a><a href="onboarding.html">Guide</a><a href="cpp-primer.html">C++ primer</a><a href="day-1.html" data-day="day-1">Day 1</a><a href="day-2.html" data-day="day-2">Day 2</a><a href="day-3.html" data-day="day-3">Day 3</a><a href="day-4.html" data-day="day-4">Day 4</a><a href="day-5.html" data-day="day-5">Day 5</a><a href="day-6.html" data-day="day-6">Day 6</a><a href="../simulator.html">Simulator ↗</a></nav>
+<button class="theme-btn" id="themeBtn" type="button">Theme</button>
+</div></header>
+<main>
+<p class="muted"><a href="index.html#diagrams">← All diagrams</a></p><h1 id="data-model">Data model</h1>
+<p><strong>There is no database.</strong> All game data lives in memory as C++ objects while the program runs. The only thing written to disk is a <strong>text save file</strong>. So the "tables" below are really <strong>classes and records</strong>, and the "rows" are objects.</p>
+<p>There are two kinds of data classes. Knowing which is which is half of understanding this codebase:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Classes</th>
+<th>Has rules?</th>
+<th>Analogy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Model objects</strong> (like <em>entities</em>)</td>
+<td><code>Tile</code>, <code>Hand</code>, <code>Boneyard</code>, <code>Layout</code>, <code>Player</code> (+ <code>Human</code>, <code>Computer</code>), <code>Move</code></td>
+<td><strong>Yes.</strong> They refuse bad changes (duplicate tiles, illegal placements, negative scores)</td>
+<td>Entities with business logic</td>
+</tr>
+<tr>
+<td><strong>Records</strong> (like <em>DTOs</em>: data transfer objects, plain carriers)</td>
+<td><code>GameState</code>, <code>PlayerState</code> (<a href="https://github.com/rome8721/Ahmed_Hira/blob/main/src/gamestate.h" data-code="src/gamestate.h" data-line="" class="code-link">gamestate.h</a>)</td>
+<td><strong>No.</strong> Public fields, no checks</td>
+<td>DTOs sent between layers</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>Round::toState()</code> copies model objects into a <code>GameState</code> record. <code>Round::restore()</code> checks a record and copies it back into model objects. <code>Serializer</code> turns records into text and back, and knows nothing about model rules.</p>
+<h2 id="1-entities-and-relationships-in-memory">1. Entities and relationships (in memory)</h2>
+<div class="mermaid">erDiagram
+    TOURNAMENT ||--|| HUMAN : "owns m_human"
+    TOURNAMENT ||--|| COMPUTER : "owns m_computer"
+    TOURNAMENT ||--o| ROUND : "creates one per loop pass"
+    ROUND }o--|| HUMAN : "m_players[0] (Player pointer)"
+    ROUND }o--|| COMPUTER : "m_players[1] (Player pointer)"
+    ROUND ||--|| LAYOUT : "owns m_layout"
+    ROUND ||--|| BONEYARD : "owns m_boneyard"
+    HUMAN ||--|| HAND : "m_hand (inherited from Player)"
+    COMPUTER ||--|| HAND : "m_hand (inherited from Player)"
+    HAND ||--o{ TILE : "m_tiles, no duplicates"
+    BONEYARD ||--o{ TILE : "m_tiles, front = next draw"
+    LAYOUT ||--o{ TILE : "m_line + m_up + m_down"
+    MOVE ||--|| TILE : "tile to place"
+
+    TOURNAMENT {
+        int m_tournamentScore "goal the session plays to (1..10000)"
+    }
+    ROUND {
+        int m_next "index 0 or 1 of player to move"
+        int m_targetScore "3 or 5"
+        int m_consecutivePasses "2 means round over"
+    }
+    HUMAN {
+        string m_name "always Human"
+        int m_roundScore "points this round"
+        int m_tournamentScore "total from finished rounds"
+    }
+    COMPUTER {
+        string m_name "always Computer"
+        int m_roundScore "points this round"
+        int m_tournamentScore "total from finished rounds"
+    }
+    HAND {
+        TileList m_tiles "vector of Tile"
+    }
+    BONEYARD {
+        TileList m_tiles "starts at 28, shuffled"
+    }
+    LAYOUT {
+        TileList m_line "main line, left to right"
+        TileList m_up "up arm, spinner outward"
+        TileList m_down "down arm, spinner outward"
+        int m_spinnerIndex "position in m_line or -1"
+    }
+    TILE {
+        int m_leftPips "0..6"
+        int m_rightPips "0..6"
+    }
+    MOVE {
+        Tile tile
+        char end "L R U or D"
+        bool valid "false = no move"
+    }</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/data-model.md">diagrams/data-model.md</a>.</p>
+<h2 id="2-records-and-the-save-file">2. Records and the save file</h2>
+<div class="mermaid">erDiagram
+    SAVE_FILE ||--|| GAMESTATE : "Serializer load and save"
+    GAMESTATE ||--|{ PLAYERSTATE : "players map, keyed by name"
+    PLAYERSTATE ||--|| HAND : "copy of a hand"
+    GAMESTATE ||--|| ROUND : "Round toState and restore"
+
+    SAVE_FILE {
+        text path "whatever the user typed"
+    }
+    GAMESTATE {
+        int tournamentScore "goal of the session"
+        int targetScore "3 or 5 (not enforced on load)"
+        map players "name to PlayerState"
+        string layoutText "L 0-4 4-6 R"
+        string boneyardText "1-4 0-5 ..."
+        string nextPlayer "Human or Computer"
+    }
+    PLAYERSTATE {
+        Hand hand
+        int roundScore "file label: Current Score"
+        int tournamentScore "player total from past rounds"
+    }</div><p class="offline-note muted">This diagram needs an internet connection to draw. Above is its source. You can also view it on GitHub: <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/onboarding/diagrams/data-model.md">diagrams/data-model.md</a>.</p>
+<h2 id="3-save-file-format-line-by-line">3. Save-file format, line by line</h2>
+<p>Example: the repo's <a href="https://github.com/rome8721/Ahmed_Hira/blob/main/test" data-code="test" data-line="" class="code-link"><code>test</code></a> file.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Save-file line</th>
+<th><code>GameState</code> field</th>
+<th>Model object it becomes (in <code>Round::restore</code>)</th>
+<th>Parsed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Tournament Score: 7</code> (outside any player block)</td>
+<td><code>tournamentScore</code></td>
+<td><code>Tournament::m_tournamentScore</code></td>
+<td><code>Serializer::load</code></td>
+</tr>
+<tr>
+<td><code>Target Score: 5</code></td>
+<td><code>targetScore</code></td>
+<td><code>Round::m_targetScore</code></td>
+<td><code>Serializer::load</code></td>
+</tr>
+<tr>
+<td><code>Computer:</code> / <code>Human:</code></td>
+<td>starts <code>players["Computer"]</code> / <code>players["Human"]</code></td>
+<td>matched to <code>Player::getName()</code></td>
+<td><code>Serializer::load</code> (a line ending in <code>:</code> with no spaces)</td>
+</tr>
+<tr>
+<td><code>Hand: 1-1 5-6 ...</code></td>
+<td><code>players[name].hand</code></td>
+<td><code>Player::setHand()</code></td>
+<td><code>Serializer::parseHand</code> → <code>Tile::fromString</code> + <code>Hand::addTile</code></td>
+</tr>
+<tr>
+<td><code>Current Score: 10</code></td>
+<td><code>players[name].roundScore</code></td>
+<td><code>Player::setScores()</code></td>
+<td><code>Serializer::load</code></td>
+</tr>
+<tr>
+<td><code>Tournament Score: 0</code> (inside a player block)</td>
+<td><code>players[name].tournamentScore</code></td>
+<td><code>Player::setScores()</code></td>
+<td><code>Serializer::load</code></td>
+</tr>
+<tr>
+<td><code>Layout:   L 0-4 4-6 R</code></td>
+<td><code>layoutText</code></td>
+<td><code>Layout</code> via <code>Layout::fromString()</code> (re-orients tiles, finds the spinner)</td>
+<td><code>Round::restore</code></td>
+</tr>
+<tr>
+<td><code>Boneyard:  1-4 0-5 ...</code></td>
+<td><code>boneyardText</code></td>
+<td><code>Boneyard</code> via <code>Tile::fromString</code> + <code>Boneyard::setTiles()</code></td>
+<td><code>Round::restore</code></td>
+</tr>
+<tr>
+<td><code>Next Player: Computer</code></td>
+<td><code>nextPlayer</code></td>
+<td><code>Round::m_next</code> (0 or 1)</td>
+<td><code>Round::restore</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Layout text with a spinner looks like <code>L 5-3 [D 3-3 U] 3-2 2-2 R</code>. Everything between <code>[D</code> and <code>U]</code> is the spinner's group: down-arm tiles (outer to inner), the spinner, then up-arm tiles (inner to outer).</p>
+<h2 id="4-rules-the-data-must-follow-invariants">4. Rules the data must follow (invariants)</h2>
+<p>"Invariant" means something that should always be true.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforced where</th>
+<th>Enforced on resume?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pips are 0–6</td>
+<td><code>Tile::setPips</code>, <code>Tile::fromString</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>No duplicate tile within one hand</td>
+<td><code>Hand::addTile</code></td>
+<td>✅ (<code>parseHand</code>)</td>
+</tr>
+<tr>
+<td>No duplicate tile within the boneyard</td>
+<td><code>Boneyard::addToBottom</code>, <code>setTiles</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Layout tiles connect (touching pips match)</td>
+<td><code>Layout::place</code>, <code>orientChain</code></td>
+<td>✅ (<code>Layout::fromString</code>)</td>
+</tr>
+<tr>
+<td>All 28 tiles exist exactly once across hands + layout + boneyard</td>
+<td>Only by construction in a fresh round (<code>Boneyard::reset</code>, then moving tiles around)</td>
+<td>❌ <strong>Not checked.</strong> A hand-edited file can duplicate or drop tiles (the Day 6 exercise adds this check)</td>
+</tr>
+<tr>
+<td>Target is 3 or 5</td>
+<td><code>Tournament::run</code> input loop</td>
+<td>❌ Load only checks <code>&gt; 0</code> (a file with <code>Target Score: 4</code> is accepted; the Day 6 exercise adds this check)</td>
+</tr>
+<tr>
+<td>Scores are not negative</td>
+<td><code>Player::addRoundPoints</code>, <code>setScores</code>, <code>Serializer::load</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Next player exists</td>
+<td><code>Serializer::load</code>, <code>Round::restore</code></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-where-each-piece-of-data-changes">5. Where each piece of data changes</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Changed by (mutators)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Boneyard::m_tiles</code></td>
+<td><code>reset</code>, <code>shuffle</code>, <code>drawTile</code>, <code>addToBottom</code>, <code>setTiles</code>, <code>clear</code></td>
+</tr>
+<tr>
+<td><code>Hand::m_tiles</code> (through <code>Player</code>)</td>
+<td><code>Player::addTile/removeTile/setHand/clearHand</code></td>
+</tr>
+<tr>
+<td><code>Layout</code> lists and spinner</td>
+<td><code>place</code>, <code>fromString</code>, <code>clear</code></td>
+</tr>
+<tr>
+<td><code>Player::m_roundScore</code></td>
+<td><code>addRoundPoints</code> (turn score + bonus), <code>setScores</code>, <code>finishRound</code> (reset to 0)</td>
+</tr>
+<tr>
+<td><code>Player::m_tournamentScore</code></td>
+<td><code>finishRound</code> (adds round score), <code>setScores</code></td>
+</tr>
+<tr>
+<td><code>Round::m_next</code></td>
+<td><code>chooseFirstPlayer</code>, <code>play</code> (alternates), <code>restore</code></td>
+</tr>
+</tbody>
+</table></div>
+</main>
+<script>
+(function () {
+  var page = document.body.dataset.page;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+
+  // Theme toggle
+  var saved = get("course:theme");
+  if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+  var tb = document.getElementById("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    var r = document.documentElement;
+    var dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark"; set("course:theme", r.dataset.theme);
+  });
+
+  // Code links open the file in VS Code when the page is opened from disk.
+  var root = null;
+  if (location.protocol === "file:") {
+    root = decodeURIComponent(location.pathname).replace(/\/onboarding\/site\/[^\/]*$/, "").replace(/^\//, "");
+  }
+  document.querySelectorAll("a[data-code]").forEach(function (a) {
+    if (!root) return;
+    a.href = "vscode://file/" + root + "/" + a.dataset.code + (a.dataset.line ? ":" + a.dataset.line : "");
+    a.title = "Open in VS Code" + (a.dataset.line ? " at line " + a.dataset.line : "");
+  });
+
+  // Copy buttons on code blocks
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var b = document.createElement("button");
+    b.className = "copy-btn"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function () {
+      var text = code.innerText.replace(/\s+#[^\n]*$/gm, "").replace(/\n+$/, "");
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+      function fallback() {
+        var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(t);
+      }
+    });
+    code.parentNode.appendChild(b);
+  });
+
+  // Checkboxes and answers are remembered in this browser.
+  document.querySelectorAll("input.task").forEach(function (cb) {
+    var k = "course:" + page + ":task:" + cb.dataset.i;
+    cb.checked = get(k) === "1";
+    cb.addEventListener("change", function () { set(k, cb.checked ? "1" : null); });
+  });
+  document.querySelectorAll("textarea.answer").forEach(function (ta) {
+    var k = "course:" + page + ":q:" + ta.dataset.q;
+    ta.value = get(k) || "";
+    ta.addEventListener("input", function () { set(k, ta.value || null); });
+  });
+
+  // "Day complete" button
+  var db = document.getElementById("doneBtn");
+  function paintDone() {
+    var d = get("course:" + page + ":done") === "1";
+    if (!db) return;
+    db.classList.toggle("is-done", d);
+    db.textContent = d ? "✓ Day complete (click to undo)" : "Mark this day complete";
+  }
+  if (db) { db.addEventListener("click", function () {
+    var k = "course:" + page + ":done"; set(k, get(k) === "1" ? null : "1"); paintDone(); markNav();
+  }); paintDone(); }
+
+  function markNav() {
+    document.querySelectorAll(".nav a[data-day]").forEach(function (a) {
+      a.classList.toggle("done", get("course:" + a.dataset.day + ":done") === "1");
+    });
+  }
+  markNav();
+
+  // Home page progress
+  document.querySelectorAll("[data-progress]").forEach(function (el) {
+    var p = el.dataset.progress, total = Number(el.dataset.total), n = 0;
+    for (var i = 0; i < total; i++) if (get("course:" + p + ":task:" + i) === "1") n++;
+    var done = get("course:" + p + ":done") === "1";
+    var bar = el.querySelector(".progress > div"); if (bar) bar.style.width = (done ? 100 : total ? Math.round(100 * n / total) : 0) + "%";
+    var label = el.querySelector(".plabel");
+    if (label) label.textContent = done ? "Complete" : (total ? n + " of " + total + " checklist items done" : "Not started");
+    var badge = el.querySelector(".badge"); if (badge) badge.textContent = done ? "✓ COMPLETE" : "";
+  });
+
+  // Diagrams: render with Mermaid if it loaded, otherwise show the source.
+  var diagrams = document.querySelectorAll(".mermaid");
+  if (diagrams.length) {
+    if (window.mermaid) {
+      var dark = document.documentElement.dataset.theme === "dark" ||
+        (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default" });
+      mermaid.run({ querySelector: ".mermaid" }).catch(function () { document.body.classList.add("show-offline"); });
+    } else {
+      diagrams.forEach(function (d) { d.classList.add("no-js"); });
+    }
+  }
+})();
+</script>
+</body>
+</html>
