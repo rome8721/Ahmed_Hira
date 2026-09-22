@@ -169,12 +169,15 @@ On Windows you'll install three free tools:
 
 **Step 2: install MSYS2.** Download the installer from https://www.msys2.org and run it. Keep the default folder, **`C:\msys64`**, because the project's settings expect it.
 
+> ⏳ **The last part of the installer can take up to 15 minutes and may look frozen.** Don't close it. Wait until it says it's finished.
+
 **Step 3: install the compiler, debugger and make.**
 1. From the Start menu, open **"MSYS2 UCRT64"**. It must be the one with *UCRT64* in the name. A black terminal window opens.
 2. Type this and press Enter. Press Enter again to accept, and `Y` to confirm:
    ```sh
    pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64-ucrt-x86_64-make
    ```
+   Red lines like `error: failed retrieving file '…' from mirror.msys2.org : Connection timed out` are **normal** if pacman then carries on to `installing …`: it just tried another download server. If it **stops** with an error instead, run the same command again.
 3. Then run this one line. MSYS2 names its make tool `mingw32-make`, and this copy lets you type plain `make` like the rest of the course:
    ```sh
    cp /ucrt64/bin/mingw32-make.exe /ucrt64/bin/make.exe
@@ -183,7 +186,10 @@ On Windows you'll install three free tools:
 
 **Step 4: let Windows find the tools.**
 1. Start menu → type **"environment"** → click **"Edit environment variables for your account"**.
-2. In the top list, select **Path** → **Edit…** → **New** → type `C:\msys64\ucrt64\bin` → **OK** → **OK**.
+2. In the top list, select **Path** → **Edit…** → **New** → type `C:\msys64\ucrt64\bin`.
+3. With the new line still selected, click **Move Up** until it's at the **top** of the list. This matters if the computer already has another compiler installed: Windows uses the first one it finds.
+4. Click **OK**, then **OK** again.
+5. **Close every open VS Code and Git Bash window.** Programs that were already open keep the old Path and won't find the new tools.
 
 **Step 5: install VS Code** from https://code.visualstudio.com (default options).
 
@@ -192,31 +198,36 @@ On Windows you'll install three free tools:
 g++ --version      # should print a version number
 gdb --version
 make --version
+which g++ gdb make # all three lines must start with /c/msys64/ucrt64/bin
 cd ~
 git clone https://github.com/rome8721/Ahmed_Hira.git
 cd Ahmed_Hira
 code .
 ```
-If a `--version` line says "command not found", step 4 didn't take effect. Recheck the Path entry, then close and reopen Git Bash.
+Run these one line at a time. If a `--version` line says "command not found", step 4 didn't take effect: recheck the Path entry, then close and reopen Git Bash. If `which` shows a different folder, another compiler is ahead of MSYS2 in the Path: go back to step 4 and move `C:\msys64\ucrt64\bin` to the top.
 
 **Step 7: in VS Code.**
 1. If VS Code asks whether you trust the authors of the folder, choose **Yes**.
-2. When it offers to install the **recommended extensions**, click **Install**. The one you need is **C/C++** (by Microsoft). CodeLLDB is only used on Mac and Linux, so you can skip it.
-3. Open the terminal: **Terminal → New Terminal** (or `` Ctrl+` ``). The terminal tab should say **bash**, because the project tells VS Code to use Git Bash. If it says *powershell*, click the **˅** next to the **+** in the terminal panel and choose **Git Bash**.
+2. Install the **C/C++** extension (by Microsoft). It's the only one you need. VS Code usually shows a pop-up offering the project's recommended extension: click **Install**. If you missed or closed the pop-up, press `Ctrl+Shift+X`, type `@recommended` in the search box, and click **Install** on **C/C++**.
+3. Open the terminal: press `` Ctrl+` `` (the key just below `Esc`). Or use the menu: **Terminal → New Terminal**. If you don't see a menu bar, click the **☰** icon at the top left first.
+   Check the prompt: it should contain **MINGW64** in purple, which means Git Bash. The project tells VS Code to use Git Bash. If the prompt starts with `PS C:\` instead (PowerShell), click the **˅** next to the **+** in the terminal panel and choose **Git Bash**.
 4. *(Optional)* install a Mermaid preview extension, so the diagrams render inside VS Code.
 
 From now on, **"the terminal"** means Git Bash, either inside VS Code (best) or the Git Bash window. PowerShell and Command Prompt won't understand the commands in this course.
 
-> **Mentor on macOS or Linux:** install a compiler (macOS: `xcode-select --install`; Ubuntu: `sudo apt install build-essential gdb`), open the folder in VS Code, and use the matching *macOS* or *Linux* debug configuration. The Makefile adapts to each system automatically.
+> **Mentor on macOS or Linux:** install a compiler (macOS: `xcode-select --install`; Ubuntu: `sudo apt install build-essential gdb`), open the folder in VS Code, install the **CodeLLDB** extension (`vadimcn.vscode-lldb`), and use the matching *macOS* or *Linux* debug configuration. The Makefile adapts to each system automatically.
 
 ### 4.2 Build and run from the terminal
+
+Run these **one line at a time**. `./program` starts the game and waits for your answers, so don't paste them all at once.
 
 ```sh
 cd ~/Ahmed_Hira        # the repo root
 make                   # compiles every src/*.cpp into program.exe
 ./program              # runs it (Windows finds program.exe). Or: make run
-make clean             # deletes the compiled program
 ```
+
+Later, when you want to throw away the compiled program and rebuild from scratch, use `make clean`. **Not now**: section 4.3 needs the program you just built.
 
 A clean build prints one long `g++ ...` line and **no warnings**. If you see warnings after a change, read them: the flags `-Wall -Wextra` turn on most warnings on purpose.
 
@@ -257,7 +268,8 @@ printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program
    - The *Linux* and *macOS* configurations don't work on Windows.
 4. **A separate console window opens.** That's your program. **Type your answers in that window** (for example `y`, then `onboarding/saves/happy-path.txt`). VS Code's own panels only show the debugger.
 5. When it pauses on your breakpoint (VS Code comes to the front):
-   - **Variables** panel: inspect `player`, `m_layout`, `m_boneyard`. Expand them.
+   - **Variables** panel: `player` is listed directly. The round's own data (`m_layout`, `m_boneyard`, `m_next` and the rest) is inside **`this`**: click the arrow next to `this` to expand it.
+   - Don't be alarmed by nonsense values such as `points = 16777216`. Variables declared further down the function, like `sum`, `points` and `note`, hold leftover memory until their line runs.
    - `F10` **Step Over**: run this line, stop on the next.
    - `F11` **Step Into**: go inside the function called on this line.
    - `Shift+F11` **Step Out**: finish this function, return to the caller.
@@ -266,7 +278,7 @@ printf 'y\nonboarding/saves/happy-path.txt\n5-6\nR\nn\n' | ./program
    - **Call Stack** panel: which functions called which to get here.
 6. While the program waits for input (`View::readLine`), nothing happens in VS Code. Switch to the console window and type.
 
-> ⚠️ **Trap:** `Ctrl+Shift+B` (the default build shortcut) runs the task *"C/C++: clang++ build active file"*, which is set up for Mac and fails on Windows. Build with `make` in the terminal, with the task **build (make)** (Terminal → Run Task…), or just press F5 with the Windows configuration selected.
+> ⚠️ **Trap:** `Ctrl+Shift+B` (the default build shortcut) runs the task *"C/C++: clang++ build active file"*, which is set up for Mac and fails on Windows. Build with `make` in the terminal, with the task **build (make)** (**Terminal → Run Task…**, via **☰** if the menu bar is hidden), or just press F5 with the Windows configuration selected.
 
 > **If F5 says it can't find gdb:** MSYS2 isn't installed in `C:\msys64`. Either reinstall it there, or change `miDebuggerPath` in [.vscode/launch.json](../.vscode/launch.json) to where `gdb.exe` actually is.
 

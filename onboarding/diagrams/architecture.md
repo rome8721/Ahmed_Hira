@@ -15,7 +15,7 @@ flowchart TB
 
     subgraph BUILD["Build and tooling (not shipped)"]
         MK["Makefile<br/>make / make run / make clean"]
-        VSC[".vscode/tasks.json + launch.json<br/>build task, CodeLLDB debug"]
+        VSC[".vscode/tasks.json + launch.json<br/>build task, gdb debug on Windows"]
         CXX["g++, C++17<br/>MinGW on Windows, clang on macOS"]
         MK --> CXX
         VSC --> CXX

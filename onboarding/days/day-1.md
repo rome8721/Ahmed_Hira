@@ -39,15 +39,16 @@
 
 Follow [ONBOARDING.md §4.1](../ONBOARDING.md#41-one-time-setup-on-windows-about-45-minutes) step by step. Ask your mentor if anything fails. Setup problems are normal, and they aren't the point of the day.
 
+Then build and run, one line at a time:
+
 ```sh
 cd ~/Ahmed_Hira
-make clean
 make
 ./program
 ```
 
 - [ ] The build prints one `g++ ...` line and **no warnings**.
-- [ ] VS Code's terminal tab says **bash** (Git Bash), not powershell.
+- [ ] VS Code's terminal prompt shows **MINGW64** (Git Bash), not `PS C:\` (PowerShell).
 - [ ] `start onboarding/simulator.html` opens the simulator in your browser (just check it opens; you'll use it on Day 2).
 
 ### 2. Play the game (30 min)

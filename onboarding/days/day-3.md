@@ -38,6 +38,8 @@ Set these breakpoints (click left of the line number). Line numbers are approxim
 | B9 | Model | [boneyard.cpp](../../src/boneyard.cpp) | `if (isEmpty())` in `drawTile` (≈100) | `m_tiles` |
 | B10 | Control | [round.cpp](../../src/round.cpp) | `int points = (sum % m_targetScore == 0) ? sum : 0;` (≈200) | `sum`, `m_targetScore` |
 
+> **Where to find the "Watch these" values:** names starting with `m_` belong to the object, so in the **Variables** panel they're inside **`this`** (click to expand). Parameters and local variables (`player`, `answer`, `tile`, `sum`) are listed directly. A local variable shows a random-looking value until the line that sets it has run: that's leftover memory, not a bug.
+
 > **Tip:** B6 and B7 are hit *many* times, because `canPlay` and `recommend` call them in loops. Right-click a breakpoint → **Disable** to silence it, or **Edit Breakpoint** → add a condition such as `end == 'R'`.
 
 ---
